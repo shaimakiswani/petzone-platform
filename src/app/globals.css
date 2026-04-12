@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #fdf2f8;
+  --color-brand-100: #fce7f3;
+  --color-brand-400: #f472b6;
+  --color-brand-500: #ec4899;
+  --color-brand-600: #db2777;
+
+  --color-background: var(--bg-main);
+  --color-foreground: var(--text-main);
+  
+  --font-sans: "Inter", system-ui, sans-serif;
+  
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+:root {
+  --bg-main: #fdf2f8;
+  --bg-card: #ffffff;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --border-main: #fce7f3;
+}
+
+.dark {
+  --bg-main: #0f172a;
+  --bg-card: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-main: #334155;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    @apply font-sans antialiased transition-colors duration-300;
+  }
+}
+
+.card-base {
+  background-color: var(--bg-card);
+  border-color: var(--border-main);
+  @apply rounded-3xl shadow-sm border transition-all;
+}
+
+.dark .bg-white {
+  background-color: var(--bg-card) !important;
+}
+
+.dark .text-gray-900 {
+  color: var(--text-main) !important;
+}
+
+.dark .text-gray-700 {
+  color: var(--text-main) !important;
+}
+
+.dark .text-gray-600, .dark .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: #1e293b80 !important;
+}
+
+.dark .border-gray-100, .dark .border-gray-200 {
+  border-color: var(--border-main) !important;
+}
