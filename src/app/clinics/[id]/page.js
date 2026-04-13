@@ -32,19 +32,20 @@ export default function ClinicDetails({ params }) {
       const existing = snapshot.docs.find(d => d.data().participants.includes(clinic.userId));
 
       if (existing) {
-        router.push("/profile?tab=messages");
+        router.push(`/profile?tab=messages&chatId=${existing.id}`);
       } else {
-        await addDoc(collection(db, "chats"), {
+        const docRef = await addDoc(collection(db, "chats"), {
           participants: [user.uid, clinic.userId],
           participantNames: {
             [user.uid]: user.displayName || "User",
-            [clinic.userId]: clinic.name + " Owner"
+            [clinic.userId]: clinic.userDisplayName || "Clinic Owner"
           },
           lastMessage: "Started a conversation",
           updatedAt: serverTimestamp(),
-          createdAt: serverTimestamp()
+          createdAt: serverTimestamp(),
+          unreadBy: [clinic.userId]
         });
-        router.push("/profile?tab=messages");
+        router.push(`/profile?tab=messages&chatId=${docRef.id}`);
       }
     } catch (err) { alert("Error starting chat."); }
   };

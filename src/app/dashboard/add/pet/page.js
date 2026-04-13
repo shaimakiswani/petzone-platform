@@ -49,6 +49,7 @@ export default function AddPetPage() {
         ...formData,
         features: features,
         userId: user.uid,
+        userDisplayName: user.displayName || user.email.split("@")[0],
         price: Number(formData.price),
         createdAt: new Date().toISOString()
       });

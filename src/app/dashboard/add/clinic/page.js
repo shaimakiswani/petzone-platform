@@ -66,6 +66,7 @@ export default function AddClinicPage() {
         ...formData,
         services: services,
         userId: user.uid,
+        userDisplayName: user.displayName || user.email.split("@")[0],
         createdAt: new Date().toISOString()
       });
       alert("Clinic listed successfully!");

@@ -54,9 +54,18 @@ function ProfileContent() {
     e.preventDefault();
     setUpdating(true);
     try {
+      // Update Firebase Auth profile
       await updateProfile(auth.currentUser, { displayName });
+      
+      // Update Firestore users collection
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, {
+        name: displayName
+      });
+
       alert("Profile updated successfully!");
     } catch (err) {
+      console.error("Update Error:", err);
       alert("Failed to update profile.");
     } finally {
       setUpdating(false);

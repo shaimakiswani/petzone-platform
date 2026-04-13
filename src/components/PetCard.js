@@ -37,20 +37,21 @@ export default function PetCard({ pet, type = "pets" }) {
       );
 
       if (existingChat) {
-        router.push("/profile?tab=messages");
+        router.push(`/profile?tab=messages&chatId=${existingChat.id}`);
       } else {
         // Create new chat
-        await addDoc(collection(db, "chats"), {
+        const docRef = await addDoc(collection(db, "chats"), {
           participants: [user.uid, pet.userId],
           participantNames: {
             [user.uid]: user.displayName || "User",
-            [pet.userId]: (pet.name || "Pet") + " Owner"
+            [pet.userId]: pet.userDisplayName || "Pet Owner"
           },
           lastMessage: "Started a conversation",
           updatedAt: serverTimestamp(),
-          createdAt: serverTimestamp()
+          createdAt: serverTimestamp(),
+          unreadBy: [pet.userId]
         });
-        router.push("/profile?tab=messages");
+        router.push(`/profile?tab=messages&chatId=${docRef.id}`);
       }
     } catch (err) {
       console.error("Message Error:", err);

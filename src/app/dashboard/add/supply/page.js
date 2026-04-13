@@ -67,6 +67,7 @@ export default function AddSupplyPage() {
         features: features,
         price: Number(formData.price),
         userId: user.uid,
+        userDisplayName: user.displayName || user.email.split("@")[0],
         createdAt: new Date().toISOString()
       });
       alert("Supply listed successfully!");
