@@ -12,14 +12,21 @@ import {
   serverTimestamp,
   doc,
   updateDoc,
-  getDocs,
+  deleteDoc,
+  arrayUnion,
+  arrayRemove,
   limit
 } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
-import { Send, User, ChevronLeft } from "lucide-react";
+import { Send, User, ChevronLeft, Trash2 } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
 
 export default function ChatSystem() {
   const { user } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const chatIdFromUrl = searchParams.get("chatId");
+
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -43,11 +50,38 @@ export default function ChatSystem() {
         ...doc.data()
       }));
       setChats(chatList);
+      
+      // Persistence: Set active chat from URL if available
+      if (chatIdFromUrl && !activeChat) {
+        const found = chatList.find(c => c.id === chatIdFromUrl);
+        if (found) setActiveChat(found);
+      }
+      
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, chatIdFromUrl, activeChat]);
+
+  // 2. Clear unread status when focusing on a chat
+  useEffect(() => {
+    if (!activeChat || !user) return;
+
+    if (activeChat.unreadBy?.includes(user.uid)) {
+      const chatRef = doc(db, "chats", activeChat.id);
+      updateDoc(chatRef, {
+        unreadBy: arrayRemove(user.uid)
+      });
+    }
+  }, [activeChat, user]);
+
+  const handleSelectChat = (chat) => {
+    setActiveChat(chat);
+    // Update URL without reloading to persist state
+    const params = new URLSearchParams(searchParams);
+    params.set("chatId", chat.id);
+    router.push(`/profile?${params.toString()}`, { scroll: false });
+  };
 
   // 2. Fetch messages for the active chat
   useEffect(() => {
@@ -91,13 +125,24 @@ export default function ChatSystem() {
       // Add message
       await addDoc(collection(db, "chats", activeChat.id, "messages"), msgData);
       
-      // Update chat meta
+      // Update chat meta & set unread for the other person
+      const otherId = activeChat.participants.find(p => p !== user.uid);
       await updateDoc(doc(db, "chats", activeChat.id), {
         lastMessage: tempMsg,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        unreadBy: arrayUnion(otherId)
       });
     } catch (err) {
       console.error("Error sending message:", err);
+    }
+  };
+
+  const handleDeleteMessage = async (msgId) => {
+    if (!confirm("Remove this message for everyone?")) return;
+    try {
+      await deleteDoc(doc(db, "chats", activeChat.id, "messages", msgId));
+    } catch (err) {
+      alert("Error deleting message");
     }
   };
 
@@ -121,15 +166,25 @@ export default function ChatSystem() {
             chats.map(chat => (
               <button 
                 key={chat.id} 
-                onClick={() => setActiveChat(chat)}
+                onClick={() => handleSelectChat(chat)}
                 className={`w-full p-4 flex items-start gap-3 hover:bg-gray-50 transition text-left border-b border-gray-50 ${activeChat?.id === chat.id ? 'bg-brand-50 border-brand-100' : ''}`}
               >
-                <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-600 shrink-0">
-                  <User size={20} />
+                <div className="relative shrink-0">
+                  <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-600">
+                    <User size={20} />
+                  </div>
+                  {chat.unreadBy?.includes(user.uid) && (
+                    <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white" />
+                  )}
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  <div className="font-bold text-gray-900 truncate">{getOtherParticipantName(chat)}</div>
-                  <div className="text-xs text-gray-500 truncate">{chat.lastMessage || "Start a conversation"}</div>
+                  <div className="font-bold text-gray-900 truncate flex justify-between items-center gap-2">
+                    <span>{getOtherParticipantName(chat)}</span>
+                    {chat.unreadBy?.includes(user.uid) && <span className="text-[10px] bg-brand-500 text-white px-1.5 rounded-full">New</span>}
+                  </div>
+                  <div className={`text-xs truncate ${chat.unreadBy?.includes(user.uid) ? 'text-brand-600 font-bold' : 'text-gray-500'}`}>
+                    {chat.lastMessage || "Start a conversation"}
+                  </div>
                 </div>
               </button>
             ))
@@ -151,13 +206,24 @@ export default function ChatSystem() {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
               {messages.map((msg, i) => (
-                <div key={msg.id} className={`flex ${msg.senderId === user.uid ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[75%] p-3 rounded-2xl text-sm ${
-                    msg.senderId === user.uid 
-                      ? 'bg-brand-500 text-white rounded-tr-none' 
-                      : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
-                  }`}>
-                    {msg.text}
+                <div key={msg.id} className={`flex group ${msg.senderId === user.uid ? 'justify-end' : 'justify-start'}`}>
+                  <div className="max-w-[75%] flex flex-col items-end">
+                    <div className={`p-3 rounded-2xl text-sm relative ${
+                      msg.senderId === user.uid 
+                        ? 'bg-brand-500 text-white rounded-tr-none' 
+                        : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
+                    }`}>
+                      {msg.text}
+                      {msg.senderId === user.uid && (
+                        <button 
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="absolute -left-8 top-1/2 -translate-y-1/2 p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                          title="Delete message"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

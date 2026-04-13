@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PawPrint, Heart, User, Search, ShoppingBag, PlusCircle, Menu, MessageSquare, X as CloseIcon } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "@/firebase/config";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -12,6 +14,25 @@ export default function Navbar() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const q = query(
+      collection(db, "chats"),
+      where("unreadBy", "array-contains", user.uid)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setUnreadCount(snapshot.docs.length);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -85,8 +106,13 @@ export default function Navbar() {
               <Heart className="w-5 h-5" />
             </Link>
 
-            <Link href="/profile?tab=messages" title="Messages" className="text-gray-600 hover:text-brand-500 transition-colors p-1.5 hover:bg-brand-50 rounded-lg">
+            <Link href="/profile?tab=messages" title="Messages" className="text-gray-600 hover:text-brand-500 transition-colors p-1.5 hover:bg-brand-50 rounded-lg relative">
               <MessageSquare className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+                  {unreadCount}
+                </span>
+              )}
             </Link>
             
             {user ? (
