@@ -6,6 +6,7 @@ import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import Link from "next/link";
 import { useFavorites } from "@/context/FavoritesContext";
+import ListingCard from "@/components/ListingCard";
 
 const CATEGORIES = ["All", "Food", "Toys", "Accessories", "Medical"];
 
@@ -89,26 +90,9 @@ export default function SuppliesPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredItems.map(item => (
-             <div key={item.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition flex flex-col group relative">
-              <div className="h-48 bg-orange-50 relative flex items-center justify-center overflow-hidden">
-                {item.image ? (
-                  <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
-                ) : (
-                  <span className="text-6xl group-hover:scale-110 transition duration-500 mb-2">🛍️</span>
-                )}
-                <span className="absolute top-4 left-4 text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded-md z-10">{item.category}</span>
-              </div>
-              <div className="p-5 flex-1 flex flex-col">
-                <h3 className="text-xl font-bold text-gray-900 mb-1">{item.name}</h3>
-                <span className="text-xl font-black text-brand-600 mb-3 block">${item.price}</span>
-                <p className="text-gray-500 text-sm mb-4 line-clamp-2 flex-1">{item.description}</p>
-                <Link href={`/supplies/${item.id}`} className="w-full bg-gray-50 hover:bg-orange-50 hover:text-orange-600 text-gray-700 font-bold py-3 rounded-xl transition mt-auto text-center block">
-                  Contact Seller
-                </Link>
-              </div>
-             </div>
+            <ListingCard key={item.id} item={item} type="supplies" />
           ))}
         </div>
       )}

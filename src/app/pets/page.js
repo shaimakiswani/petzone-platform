@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import PetCard from "@/components/PetCard";
+import ListingCard from "@/components/ListingCard";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/firebase/config";
@@ -99,7 +99,7 @@ export default function PetsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredPets.map(pet => (
-            <PetCard key={pet.id} pet={pet} />
+            <ListingCard key={pet.id} item={pet} type="pets" />
           ))}
         </div>
       )}

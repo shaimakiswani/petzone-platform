@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { collection, query, where, getDocs, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { updateProfile, sendPasswordResetEmail } from "firebase/auth";
 import { auth, db } from "@/firebase/config";
-import PetCard from "@/components/PetCard";
+import ListingCard from "@/components/ListingCard";
 import { LogOut, User, Settings, Package, Trash2, Shield, Moon, Sun, Bell, Camera } from "lucide-react";
 
 import ChatSystem from "@/components/ChatSystem";
@@ -213,7 +213,7 @@ function ProfileContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {myAds.map(ad => (
                   <div key={ad.id} className="relative group">
-                    <PetCard pet={ad} type={ad.type} />
+                    <ListingCard item={ad} type={ad.type} />
                     <div className="absolute top-4 left-4 flex gap-2 z-20">
                       <button 
                         onClick={() => handleDelete(ad.id, ad.type)}
