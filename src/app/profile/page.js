@@ -12,6 +12,7 @@ import { LogOut, User, Settings, Package, Trash2, Shield, Moon, Sun, Bell, Camer
 import ChatSystem from "@/components/ChatSystem";
 
 function ProfileContent() {
+  const router = useRouter();
   const { user, logout, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const queryTab = searchParams.get("tab");

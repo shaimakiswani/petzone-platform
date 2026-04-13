@@ -102,9 +102,9 @@ export default function ChatSystem() {
   };
 
   const getOtherParticipantName = (chat) => {
-    // In a real app, we'd fetch the user's name from a 'users' collection
-    // For now, we'll show a placeholder or the ID
-    return chat.participantNames?.[chat.participants.find(p => p !== user.uid)] || "User Listing";
+    if (!user || !chat.participants) return "User";
+    const otherId = chat.participants.find(p => p !== user.uid);
+    return chat.participantNames?.[otherId] || "User Listing";
   };
 
   if (loading) return <div className="text-center py-10 text-gray-400">Loading conversations...</div>;
