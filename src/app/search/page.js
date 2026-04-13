@@ -1,14 +1,14 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { collection, getDocs, query } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import PetCard from "@/components/PetCard";
 import Link from "next/link";
 import { Search, Loader2 } from "lucide-react";
 
-export default function GlobalSearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") || "";
   
@@ -171,5 +171,13 @@ export default function GlobalSearchPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function GlobalSearchPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="animate-spin text-brand-500" /></div>}>
+      <SearchContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, Suspense } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { collection, query, where, getDocs, doc, deleteDoc, updateDoc } from "firebase/firestore";
@@ -11,7 +11,7 @@ import { LogOut, User, Settings, Package, Trash2, Shield, Moon, Sun, Bell, Camer
 
 import ChatSystem from "@/components/ChatSystem";
 
-export default function ProfilePage() {
+function ProfileContent() {
   const { user, logout, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const queryTab = searchParams.get("tab");
@@ -305,5 +305,14 @@ export default function ProfilePage() {
       </div>
 
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  const router = useRouter(); // Required for ProfileContent redirection logic, though it can stay in Content too
+  return (
+    <Suspense fallback={<div className="text-center py-20 text-gray-500">Loading your space...</div>}>
+      <ProfileContent />
+    </Suspense>
   );
 }
