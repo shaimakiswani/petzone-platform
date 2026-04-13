@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { PawPrint, Heart, User, Search, ShoppingBag, PlusCircle, Menu, X as CloseIcon } from "lucide-react";
+import { PawPrint, Heart, User, Search, ShoppingBag, PlusCircle, Menu, MessageSquare, X as CloseIcon } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
@@ -63,6 +63,9 @@ export default function Navbar() {
             ))}
             <Link href="/dashboard/favorites" title="Favorites" className={`transition-colors p-2 hover:bg-brand-50 rounded-full ${pathname === '/dashboard/favorites' ? 'text-brand-500' : 'text-gray-600 hover:text-brand-500'}`}>
               <Heart className="w-5 h-5" />
+            </Link>
+            <Link href="/profile?tab=messages" title="Messages" className={`transition-colors p-2 hover:bg-brand-50 rounded-full ${pathname.includes('tab=messages') ? 'text-brand-500' : 'text-gray-600 hover:text-brand-500'}`}>
+              <MessageSquare className="w-5 h-5" />
             </Link>
           </div>
 

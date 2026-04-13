@@ -180,40 +180,52 @@ export default function AddPetPage() {
         </div>
 
         {/* Contact & Images */}
-        <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Phone</label>
-            <input required type="tel" name="phone" value={formData.phone} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder="+1 (555) 000-0000" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-slate-50 p-4 rounded-2xl border-2 border-dashed border-slate-200">
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">1. Card Cover Image (Required)</label>
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleCoverUpload} 
-                className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-brand-500 file:text-white" 
-              />
-              {formData.image && <div className="mt-3 relative w-20 h-20"><img src={formData.image} className="w-full h-full object-cover rounded-lg shadow-sm" /></div>}
-            </div>
-
-            <div className="bg-slate-50 p-4 rounded-2xl border-2 border-dashed border-slate-200">
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">2. Additional Gallery Images (Max 5)</label>
-              <input 
-                type="file" 
-                multiple
-                accept="image/*" 
-                onChange={handleGalleryUpload} 
-                className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-slate-200 file:text-slate-700" 
-              />
-              <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
-                {formData.gallery.map((img, i) => (
-                  <div key={i} className="relative shrink-0 w-16 h-16 group">
-                    <img src={img} className="w-full h-full object-cover rounded-lg shadow-sm" />
-                    <button type="button" onClick={() => removeGalleryImage(i)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"><CloseIcon size={12} /></button>
+            <label className="block text-sm font-bold text-gray-900 mb-4">Media Assets</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Box 1: Cover */}
+              <div className="bg-brand-50/50 p-5 rounded-3xl border-2 border-dashed border-brand-200 hover:border-brand-400 transition group relative">
+                <label className="block text-xs font-black text-brand-600 uppercase mb-3 tracking-widest">1. Card Cover Image (Required)</label>
+                <input 
+                  required={!formData.image}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleCoverUpload} 
+                  className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-brand-500 file:text-white cursor-pointer" 
+                />
+                <p className="text-[10px] text-gray-400 mt-2">This image appears on the main marketplace cards.</p>
+                {formData.image && (
+                  <div className="mt-4 relative w-24 h-24 rounded-2xl overflow-hidden border-4 border-white shadow-lg animate-in zoom-in duration-300">
+                    <img src={formData.image} className="w-full h-full object-cover" />
                   </div>
-                ))}
+                )}
+              </div>
+
+              {/* Box 2: Gallery */}
+              <div className="bg-slate-50 p-5 rounded-3xl border-2 border-dashed border-slate-200 hover:border-slate-400 transition group relative">
+                <label className="block text-xs font-black text-slate-500 uppercase mb-3 tracking-widest">2. Detailed Gallery (Max 5)</label>
+                <input 
+                  type="file" 
+                  multiple
+                  accept="image/*" 
+                  onChange={handleGalleryUpload} 
+                  className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-slate-200 file:text-slate-700 cursor-pointer" 
+                />
+                <p className="text-[10px] text-gray-400 mt-2">Add more angles! These will appear in the photo slider.</p>
+                <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-none">
+                  {formData.gallery.map((img, i) => (
+                    <div key={i} className="relative shrink-0 w-16 h-16 group/img rounded-xl overflow-hidden border-2 border-white shadow-sm">
+                      <img src={img} className="w-full h-full object-cover" />
+                      <button 
+                        type="button" 
+                        onClick={() => removeGalleryImage(i)} 
+                        className="absolute inset-0 bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition duration-200"
+                      >
+                        <CloseIcon size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
