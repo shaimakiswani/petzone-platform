@@ -23,9 +23,11 @@ export default function RegisterPage() {
       setError("");
       setLoading(true);
 
-      // Unique Name Check
+      // Unique Name Check (Case-insensitive)
       const usersRef = collection(db, "users");
-      const q = query(usersRef, where("name", "==", name));
+      const normalizedName = name.trim().toLowerCase();
+      
+      const q = query(usersRef, where("name_lowercase", "==", normalizedName));
       const querySnapshot = await getDocs(q);
       
       if (!querySnapshot.empty) {
@@ -39,7 +41,8 @@ export default function RegisterPage() {
       // Initialize basic user profile in Firestore
       await setDoc(doc(db, "users", userCredential.user.uid), {
         uid: userCredential.user.uid,
-        name: name,
+        name: name.trim(),
+        name_lowercase: normalizedName,
         email: email,
         role: "user",
         createdAt: new Date().toISOString()

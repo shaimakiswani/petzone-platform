@@ -1,13 +1,20 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { doc, getDoc } from "firebase/firestore";
+import { 
+  doc, 
+  getDoc, 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  addDoc, 
+  serverTimestamp 
+} from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { ArrowLeft, Phone, MapPin, Star } from "lucide-react";
 import Link from "next/link";
 import CopyPhoneButton from "@/components/CopyPhoneButton";
-
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 

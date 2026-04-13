@@ -55,9 +55,10 @@ function ProfileContent() {
     setUpdating(true);
     try {
       // 1. Check if name is changing and if it's unique
-      if (displayName !== user.displayName) {
+      if (displayName.trim() !== user.displayName) {
+        const normalizedName = displayName.trim().toLowerCase();
         const usersRef = collection(db, "users");
-        const q = query(usersRef, where("name", "==", displayName));
+        const q = query(usersRef, where("name_lowercase", "==", normalizedName));
         const querySnapshot = await getDocs(q);
         
         if (!querySnapshot.empty) {
@@ -68,12 +69,13 @@ function ProfileContent() {
       }
 
       // 2. Update Firebase Auth profile
-      await updateProfile(auth.currentUser, { displayName });
+      await updateProfile(auth.currentUser, { displayName: displayName.trim() });
       
       // 3. Update Firestore users collection
       const userRef = doc(db, "users", user.uid);
       await updateDoc(userRef, {
-        name: displayName
+        name: displayName.trim(),
+        name_lowercase: displayName.trim().toLowerCase()
       });
 
       alert("Profile updated successfully!");

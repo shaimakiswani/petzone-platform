@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
+import { 
+  doc, 
+  getDoc, 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  addDoc, 
+  serverTimestamp 
+} from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { useAuth } from "@/context/AuthContext";
 import { MapPin, Phone, ArrowLeft, Heart, CheckCircle2, Mars, Venus } from "lucide-react";
 import { useFavorites } from "@/context/FavoritesContext";
-import { use } from "react";
 import CopyPhoneButton from "@/components/CopyPhoneButton";
-
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/firebase/config";
 
 export default function PetDetailsPage({ params }) {
   const unwrappedParams = use(params);
