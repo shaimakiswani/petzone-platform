@@ -34,11 +34,15 @@ export default function HostelDetails({ params }) {
       if (existing) {
         router.push(`/profile?tab=messages&chatId=${existing.id}`);
       } else {
+        // Fetch real owner name
+        const ownerSnap = await getDoc(doc(db, "users", hostel.userId));
+        const ownerName = ownerSnap.exists() ? ownerSnap.data().name : (hostel.userDisplayName || "Hostel Owner");
+
         const docRef = await addDoc(collection(db, "chats"), {
           participants: [user.uid, hostel.userId],
           participantNames: {
             [user.uid]: user.displayName || "User",
-            [hostel.userId]: hostel.userDisplayName || "Hostel Owner"
+            [hostel.userId]: ownerName
           },
           lastMessage: "Started a conversation",
           updatedAt: serverTimestamp(),

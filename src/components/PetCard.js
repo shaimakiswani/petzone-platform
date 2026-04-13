@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
 export default function PetCard({ pet, type = "pets" }) {
@@ -39,12 +39,16 @@ export default function PetCard({ pet, type = "pets" }) {
       if (existingChat) {
         router.push(`/profile?tab=messages&chatId=${existingChat.id}`);
       } else {
+        // Fetch real owner name from profile
+        const ownerSnap = await getDoc(doc(db, "users", pet.userId));
+        const ownerName = ownerSnap.exists() ? ownerSnap.data().name : (pet.userDisplayName || "Owner");
+
         // Create new chat
         const docRef = await addDoc(collection(db, "chats"), {
           participants: [user.uid, pet.userId],
           participantNames: {
             [user.uid]: user.displayName || "User",
-            [pet.userId]: pet.userDisplayName || "Pet Owner"
+            [pet.userId]: ownerName
           },
           lastMessage: "Started a conversation",
           updatedAt: serverTimestamp(),

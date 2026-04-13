@@ -10,7 +10,8 @@ import { useFavorites } from "@/context/FavoritesContext";
 import { use } from "react";
 import CopyPhoneButton from "@/components/CopyPhoneButton";
 
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/firebase/config";
 
 export default function PetDetailsPage({ params }) {
   const unwrappedParams = use(params);
@@ -37,11 +38,15 @@ export default function PetDetailsPage({ params }) {
       if (existing) {
         router.push(`/profile?tab=messages&chatId=${existing.id}`);
       } else {
+        // Fetch real owner name
+        const ownerSnap = await getDoc(doc(db, "users", pet.userId));
+        const ownerName = ownerSnap.exists() ? ownerSnap.data().name : (pet.userDisplayName || "Pet Owner");
+
         const docRef = await addDoc(collection(db, "chats"), {
           participants: [user.uid, pet.userId],
           participantNames: {
             [user.uid]: user.displayName || "User",
-            [pet.userId]: pet.userDisplayName || "Pet Owner"
+            [pet.userId]: ownerName
           },
           lastMessage: "Started a conversation",
           updatedAt: serverTimestamp(),

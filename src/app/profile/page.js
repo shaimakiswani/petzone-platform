@@ -54,10 +54,23 @@ function ProfileContent() {
     e.preventDefault();
     setUpdating(true);
     try {
-      // Update Firebase Auth profile
+      // 1. Check if name is changing and if it's unique
+      if (displayName !== user.displayName) {
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("name", "==", displayName));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          alert("This name is already taken. Please choose another Full Name.");
+          setUpdating(false);
+          return;
+        }
+      }
+
+      // 2. Update Firebase Auth profile
       await updateProfile(auth.currentUser, { displayName });
       
-      // Update Firestore users collection
+      // 3. Update Firestore users collection
       const userRef = doc(db, "users", user.uid);
       await updateDoc(userRef, {
         name: displayName

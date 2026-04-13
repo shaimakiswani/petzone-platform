@@ -34,11 +34,15 @@ export default function SupplyDetails({ params }) {
       if (existing) {
         router.push(`/profile?tab=messages&chatId=${existing.id}`);
       } else {
+        // Fetch real owner name
+        const ownerSnap = await getDoc(doc(db, "users", supply.userId));
+        const ownerName = ownerSnap.exists() ? ownerSnap.data().name : (supply.userDisplayName || "Seller");
+
         const docRef = await addDoc(collection(db, "chats"), {
           participants: [user.uid, supply.userId],
           participantNames: {
             [user.uid]: user.displayName || "User",
-            [supply.userId]: supply.userDisplayName || "Seller"
+            [pet.userId]: ownerName
           },
           lastMessage: "Started a conversation",
           updatedAt: serverTimestamp(),

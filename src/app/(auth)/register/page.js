@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PawPrint, Mail, Lock, User } from "lucide-react";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, query, collection, where, getDocs } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
 export default function RegisterPage() {
@@ -22,6 +22,18 @@ export default function RegisterPage() {
     try {
       setError("");
       setLoading(true);
+
+      // Unique Name Check
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("name", "==", name));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        setError("This name is already taken. Please choose another Full Name.");
+        setLoading(false);
+        return;
+      }
+
       const userCredential = await register(email, password);
       
       // Initialize basic user profile in Firestore

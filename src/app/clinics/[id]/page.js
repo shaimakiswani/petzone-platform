@@ -34,11 +34,15 @@ export default function ClinicDetails({ params }) {
       if (existing) {
         router.push(`/profile?tab=messages&chatId=${existing.id}`);
       } else {
+        // Fetch real owner name
+        const ownerSnap = await getDoc(doc(db, "users", clinic.userId));
+        const ownerName = ownerSnap.exists() ? ownerSnap.data().name : (clinic.userDisplayName || "Clinic Owner");
+
         const docRef = await addDoc(collection(db, "chats"), {
           participants: [user.uid, clinic.userId],
           participantNames: {
             [user.uid]: user.displayName || "User",
-            [clinic.userId]: clinic.userDisplayName || "Clinic Owner"
+            [clinic.userId]: ownerName
           },
           lastMessage: "Started a conversation",
           updatedAt: serverTimestamp(),
