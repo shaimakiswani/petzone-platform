@@ -42,8 +42,7 @@ export default function ChatSystem() {
 
     const q = query(
       collection(db, "chats"),
-      where("participants", "array-contains", user.uid),
-      orderBy("updatedAt", "desc")
+      where("participants", "array-contains", user.uid)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -51,11 +50,19 @@ export default function ChatSystem() {
         id: doc.id,
         ...doc.data()
       }));
-      setChats(chatList);
+
+      // Sort in-memory to bypass index requirement
+      const sortedList = chatList.sort((a, b) => {
+        const timeA = a.updatedAt?.toMillis?.() || a.updatedAt?.seconds * 1000 || 0;
+        const timeB = b.updatedAt?.toMillis?.() || b.updatedAt?.seconds * 1000 || 0;
+        return timeB - timeA;
+      });
+
+      setChats(sortedList);
       
       // Persistence: Set active chat from URL if available
       if (chatIdFromUrl && !activeChat) {
-        const found = chatList.find(c => c.id === chatIdFromUrl);
+        const found = sortedList.find(c => c.id === chatIdFromUrl);
         if (found) setActiveChat(found);
       }
       
