@@ -61,12 +61,6 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <Link href="/dashboard/favorites" title="Favorites" className={`transition-colors p-2 hover:bg-brand-50 rounded-full ${pathname === '/dashboard/favorites' ? 'text-brand-500' : 'text-gray-600 hover:text-brand-500'}`}>
-              <Heart className="w-5 h-5" />
-            </Link>
-            <Link href="/profile?tab=messages" title="Messages" className={`transition-colors p-2 hover:bg-brand-50 rounded-full ${pathname.includes('tab=messages') ? 'text-brand-500' : 'text-gray-600 hover:text-brand-500'}`}>
-              <MessageSquare className="w-5 h-5" />
-            </Link>
           </div>
 
           <form onSubmit={handleSearch} className="hidden lg:flex items-center relative max-w-xs w-full ml-4">
@@ -85,6 +79,14 @@ export default function Navbar() {
             <Link href="/dashboard/add" className="text-brand-500 hover:text-brand-600 flex items-center gap-1 text-sm font-medium">
               <PlusCircle className="w-5 h-5" />
               <span className="hidden sm:inline">Post Ad</span>
+            </Link>
+
+            <Link href="/dashboard/favorites" title="Favorites" className="text-gray-600 hover:text-brand-500 transition-colors p-1.5 hover:bg-brand-50 rounded-lg">
+              <Heart className="w-5 h-5" />
+            </Link>
+
+            <Link href="/profile?tab=messages" title="Messages" className="text-gray-600 hover:text-brand-500 transition-colors p-1.5 hover:bg-brand-50 rounded-lg">
+              <MessageSquare className="w-5 h-5" />
             </Link>
             
             {user ? (

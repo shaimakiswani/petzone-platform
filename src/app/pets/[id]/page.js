@@ -188,14 +188,16 @@ export default function PetDetailsPage({ params }) {
           </div>
           
           <div>
-            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Contact Owner</h3>
+            <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-inner">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Phone size={18} className="text-brand-500" /> Contact Owner
+              </h3>
               {!user ? (
                 <div className="text-center">
                   <p className="text-gray-500 text-sm mb-4">You must be logged in to view contact details.</p>
                   <button 
                     onClick={() => router.push('/login')}
-                    className="w-full bg-brand-500 text-white font-bold py-3 rounded-xl hover:bg-brand-600 transition"
+                    className="w-full bg-brand-500 text-white font-bold py-3 rounded-xl hover:bg-brand-600 transition shadow-md shadow-brand-500/20"
                   >
                     Login to Contact
                   </button>
@@ -205,7 +207,7 @@ export default function PetDetailsPage({ params }) {
                   <CopyPhoneButton phone={pet.phone} />
                   <button 
                     onClick={handleMessage}
-                    className="w-full border-2 border-brand-500 text-brand-500 font-bold py-3 rounded-xl hover:bg-brand-50 transition"
+                    className="w-full bg-white border-2 border-brand-500 text-brand-500 font-bold py-3 rounded-xl hover:bg-brand-50 transition shadow-sm"
                   >
                     Message Owner
                   </button>

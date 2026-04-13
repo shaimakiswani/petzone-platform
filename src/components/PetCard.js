@@ -37,24 +37,24 @@ export default function PetCard({ pet, type = "pets" }) {
       );
 
       if (existingChat) {
-        router.push("/profile");
+        router.push("/profile?tab=messages");
       } else {
         // Create new chat
         await addDoc(collection(db, "chats"), {
           participants: [user.uid, pet.userId],
           participantNames: {
             [user.uid]: user.displayName || "User",
-            [pet.userId]: pet.name + " Owner"
+            [pet.userId]: (pet.name || "Pet") + " Owner"
           },
           lastMessage: "Started a conversation",
           updatedAt: serverTimestamp(),
           createdAt: serverTimestamp()
         });
-        router.push("/profile");
+        router.push("/profile?tab=messages");
       }
     } catch (err) {
-      console.error(err);
-      alert("Error starting chat.");
+      console.error("Message Error:", err);
+      alert("Could not start chat. Please try again.");
     }
   };
 

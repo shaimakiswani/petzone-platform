@@ -139,8 +139,10 @@ export default function SupplyDetails({ params }) {
             </div>
           </div>
           
-          <div className="bg-gray-50 p-6 rounded-2xl mt-auto">
-            <h3 className="font-bold text-gray-900 mb-4">Contact Seller</h3>
+          <div className="bg-gray-50 p-6 rounded-3xl mt-auto shadow-inner border border-gray-100">
+            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Phone size={18} className="text-brand-500" /> Contact Seller
+            </h3>
             <div className="space-y-3">
               <CopyPhoneButton phone={supply.phone} />
               <button 
