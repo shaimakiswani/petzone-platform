@@ -11,6 +11,7 @@ import {
   onSnapshot, 
   serverTimestamp,
   doc,
+  getDoc,
   updateDoc,
   deleteDoc,
   arrayUnion,
@@ -32,6 +33,7 @@ export default function ChatSystem() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [resolvedNames, setResolvedNames] = useState({});
   const scrollRef = useRef();
 
   // 1. Fetch all chats for the current user
@@ -62,6 +64,44 @@ export default function ChatSystem() {
 
     return () => unsubscribe();
   }, [user, chatIdFromUrl, activeChat]);
+
+  // 1.5. Dynamic Name Resolution: Fetch real names for all chat participants
+  useEffect(() => {
+    if (chats.length === 0) return;
+
+    const resolveNames = async () => {
+      const uidsToFetch = new Set();
+      chats.forEach(chat => {
+        const otherId = chat.participants?.find(p => p !== user.uid);
+        if (otherId && !resolvedNames[otherId]) {
+          uidsToFetch.add(otherId);
+        }
+      });
+
+      if (uidsToFetch.size === 0) return;
+
+      const newNames = { ...resolvedNames };
+      let updated = false;
+
+      for (const uid of uidsToFetch) {
+        try {
+          const userSnap = await getDoc(doc(db, "users", uid));
+          if (userSnap.exists()) {
+            newNames[uid] = userSnap.data().name;
+            updated = true;
+          }
+        } catch (err) {
+          console.error("Error resolving name for:", uid, err);
+        }
+      }
+
+      if (updated) {
+        setResolvedNames(newNames);
+      }
+    };
+
+    resolveNames();
+  }, [chats, user, resolvedNames]);
 
   // 2. Clear unread status when focusing on a chat
   useEffect(() => {
@@ -149,7 +189,7 @@ export default function ChatSystem() {
   const getOtherParticipantName = (chat) => {
     if (!user || !chat.participants) return "User";
     const otherId = chat.participants.find(p => p !== user.uid);
-    return chat.participantNames?.[otherId] || "User Listing";
+    return resolvedNames[otherId] || chat.participantNames?.[otherId] || "User";
   };
 
   if (loading) return <div className="text-center py-10 text-gray-400">Loading conversations...</div>;
