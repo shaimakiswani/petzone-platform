@@ -1,24 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { collection, query, where, getDocs, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { updateProfile, sendPasswordResetEmail } from "firebase/auth";
 import { auth, db } from "@/firebase/config";
 import PetCard from "@/components/PetCard";
 import { LogOut, User, Settings, Package, Trash2, Shield, Moon, Sun, Bell, Camera } from "lucide-react";
 
+import ChatSystem from "@/components/ChatSystem";
+
 export default function ProfilePage() {
   const { user, logout, loading: authLoading } = useAuth();
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryTab = searchParams.get("tab");
   
   const [myAds, setMyAds] = useState([]);
   const [loadingAds, setLoadingAds] = useState(true);
-  const [activeTab, setActiveTab] = useState("ads"); // ads, settings
+  const [activeTab, setActiveTab] = useState(queryTab || "ads"); // ads, messages, settings
   const [displayName, setDisplayName] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [updating, setUpdating] = useState(false);
+
+  useEffect(() => {
+    if (queryTab) setActiveTab(queryTab);
+  }, [queryTab]);
 
   useEffect(() => {
     if (user?.displayName) setDisplayName(user.displayName);
@@ -139,6 +146,12 @@ export default function ProfilePage() {
             <Package size={20} /> My Ads
           </button>
           <button 
+            onClick={() => setActiveTab("messages")}
+            className={`flex items-center gap-3 w-full p-3 text-left rounded-xl font-medium transition ${activeTab === 'messages' ? 'bg-brand-50 text-brand-600' : 'hover:bg-gray-50 text-gray-700'}`}
+          >
+            <Bell size={20} /> Messages
+          </button>
+          <button 
             onClick={() => setActiveTab("settings")}
             className={`flex items-center gap-3 w-full p-3 text-left rounded-xl font-medium transition ${activeTab === 'settings' ? 'bg-brand-50 text-brand-600' : 'hover:bg-gray-50 text-gray-700'}`}
           >
@@ -196,6 +209,10 @@ export default function ProfilePage() {
                 ))}
               </div>
             )}
+          </div>
+        ) : activeTab === "messages" ? (
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 overflow-hidden">
+             <ChatSystem />
           </div>
         ) : (
           <div className="space-y-6">

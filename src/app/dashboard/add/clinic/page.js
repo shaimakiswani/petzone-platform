@@ -7,10 +7,20 @@ import { db } from "@/firebase/config";
 import { collection, addDoc } from "firebase/firestore";
 import { compressImage } from "@/utils/imageCompressor";
 
+import { X as CloseIcon } from "lucide-react";
+
 export default function AddClinicPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [formData, setFormData] = useState({ name: "", location: "", rating: "5.0", phone: "", image: "", description: "" });
+  const [formData, setFormData] = useState({ 
+    name: "", 
+    location: "", 
+    rating: "5.0", 
+    phone: "", 
+    image: "", 
+    gallery: [],
+    description: "" 
+  });
   const [services, setServices] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -20,7 +30,7 @@ export default function AddClinicPage() {
     setServices(prev => prev.includes(service) ? prev.filter(s => s !== service) : [...prev, service]);
   };
 
-  const handleImageChange = async (e) => {
+  const handleCoverUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     try {
@@ -31,9 +41,25 @@ export default function AddClinicPage() {
     }
   };
 
+  const handleGalleryUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + formData.gallery.length > 5) {
+      return alert("You can only add up to 5 gallery images.");
+    }
+    try {
+      const compressedImages = await Promise.all(files.map(file => compressImage(file)));
+      setFormData(prev => ({...prev, gallery: [...prev.gallery, ...compressedImages].slice(0, 5)}));
+    } catch (err) { alert("Error processing images."); }
+  };
+
+  const removeGalleryImage = (index) => {
+    setFormData(prev => ({...prev, gallery: prev.gallery.filter((_, i) => i !== index)}));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
+    if (!formData.image) return alert("Please upload a cover image!");
     setSubmitting(true);
     try {
       await addDoc(collection(db, "clinics"), {
@@ -91,20 +117,42 @@ export default function AddClinicPage() {
              placeholder="Tell us more about your clinic..."
            ></textarea>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium mb-1">Contact Phone</label>
-            <input required type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl" placeholder="+1 (555) 000-0000" />
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-1">Contact Phone</label>
+              <input required type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl" placeholder="+1 (555) 000-0000" />
+            </div>
+            
+            <div className="bg-slate-50 p-4 rounded-2xl border-2 border-dashed border-slate-200">
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">1. Card Cover Image (Required)</label>
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleCoverUpload} 
+                className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-brand-500 file:text-white" 
+              />
+              {formData.image && <div className="mt-3 relative w-20 h-20"><img src={formData.image} className="w-full h-full object-cover rounded-lg shadow-sm" /></div>}
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Image Upload (Gallery)</label>
+
+          <div className="bg-slate-50 p-4 rounded-2xl border-2 border-dashed border-slate-200">
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">2. Additional Gallery Images (Max 5)</label>
             <input 
               type="file" 
+              multiple
               accept="image/*" 
-              onChange={handleImageChange} 
-              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100" 
+              onChange={handleGalleryUpload} 
+              className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-slate-200 file:text-slate-700" 
             />
-            {formData.image && <p className="text-xs text-green-600 mt-2">Image attached!</p>}
+            <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+              {formData.gallery.map((img, i) => (
+                <div key={i} className="relative shrink-0 w-16 h-16 group">
+                  <img src={img} className="w-full h-full object-cover rounded-lg shadow-sm" />
+                  <button type="button" onClick={() => removeGalleryImage(i)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"><CloseIcon size={12} /></button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         <button disabled={submitting} type="submit" className="w-full bg-brand-500 text-white font-bold py-4 rounded-xl hover:bg-brand-600 transition">Publish Clinic</button>

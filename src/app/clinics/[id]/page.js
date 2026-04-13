@@ -7,10 +7,47 @@ import { ArrowLeft, Phone, MapPin, Star } from "lucide-react";
 import Link from "next/link";
 import CopyPhoneButton from "@/components/CopyPhoneButton";
 
+import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+
 export default function ClinicDetails({ params }) {
   const unwrappedParams = use(params);
+  const router = useRouter();
+  const { user } = useAuth();
   const [clinic, setClinic] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const handleMessage = async () => {
+    if (!user) {
+      alert("Please login to message the owner.");
+      router.push("/login");
+      return;
+    }
+    if (user.uid === clinic.userId) return alert("This is your own listing!");
+
+    try {
+      const q = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
+      const snapshot = await getDocs(q);
+      const existing = snapshot.docs.find(d => d.data().participants.includes(clinic.userId));
+
+      if (existing) {
+        router.push("/profile?tab=messages");
+      } else {
+        await addDoc(collection(db, "chats"), {
+          participants: [user.uid, clinic.userId],
+          participantNames: {
+            [user.uid]: user.displayName || "User",
+            [clinic.userId]: clinic.name + " Owner"
+          },
+          lastMessage: "Started a conversation",
+          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp()
+        });
+        router.push("/profile?tab=messages");
+      }
+    } catch (err) { alert("Error starting chat."); }
+  };
 
   useEffect(() => {
     async function fetchClinic() {
@@ -39,11 +76,37 @@ export default function ClinicDetails({ params }) {
       </Link>
       
       <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 flex flex-col md:flex-row">
-        <div className="md:w-1/2 p-8 bg-blue-50 flex items-center justify-center min-h-[300px]">
-          {clinic.image ? (
-            <img src={clinic.image} alt={clinic.name} className="w-full h-auto object-cover rounded-2xl shadow-md" />
-          ) : (
-            <span className="text-8xl">🏥</span>
+        <div className="md:w-1/2 p-2 bg-slate-50 relative min-h-[400px]">
+          <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-2xl">
+            {clinic.image ? (
+              <img 
+                src={clinic.gallery && clinic.gallery.length > 0 && clinic.activeImage ? clinic.activeImage : clinic.image} 
+                className="w-full h-full object-cover transition duration-500 shadow-md" 
+              />
+            ) : (
+              <span className="text-8xl">🏥</span>
+            )}
+          </div>
+
+          {/* Gallery Thumbnails */}
+          {clinic.gallery && clinic.gallery.length > 0 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-1.5 bg-white/20 backdrop-blur-md rounded-xl border border-white/30">
+              <button 
+                onClick={() => setClinic({...clinic, activeImage: clinic.image})}
+                className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition ${!clinic.activeImage || clinic.activeImage === clinic.image ? 'border-blue-500 scale-105' : 'border-transparent opacity-70'}`}
+              >
+                <img src={clinic.image} className="w-full h-full object-cover" />
+              </button>
+              {clinic.gallery.map((img, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => setClinic({...clinic, activeImage: img})}
+                  className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition ${clinic.activeImage === img ? 'border-blue-500 scale-105' : 'border-transparent opacity-70'}`}
+                >
+                  <img src={img} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
           )}
         </div>
         
@@ -84,11 +147,16 @@ export default function ClinicDetails({ params }) {
             <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Phone size={18} className="text-brand-500" /> Contact Reception
             </h3>
-            <CopyPhoneButton phone={clinic.phone} />
-            
-            <button className="w-full mt-4 bg-white border border-gray-200 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50 transition shadow-sm">
-              Visit Website
-            </button>
+            <div className="space-y-3">
+              <CopyPhoneButton phone={clinic.phone} />
+              
+              <button 
+                onClick={handleMessage}
+                className="w-full bg-white border-2 border-brand-500 text-brand-500 font-bold py-3 rounded-xl hover:bg-brand-50 transition shadow-sm"
+              >
+                Message Owner
+              </button>
+            </div>
           </div>
         </div>
       </div>

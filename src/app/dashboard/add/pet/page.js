@@ -13,13 +13,14 @@ export default function AddPetPage() {
 
   const [formData, setFormData] = useState({
     name: "",
-    type: "Cat", // Default
-    breed: "Persian", // Default
-    age: "0-6 months", // Default
+    type: "Cat",
+    breed: "Persian",
+    age: "0-6 months",
     price: "",
     location: "",
     phone: "",
     image: "",
+    gallery: [],
     gender: "Male",
     description: "",
   });
@@ -40,6 +41,7 @@ export default function AddPetPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
+    if (!formData.image) return alert("Please upload a cover image!");
 
     setSubmitting(true);
     try {
@@ -60,7 +62,7 @@ export default function AddPetPage() {
     }
   };
 
-  const handleImageChange = async (e) => {
+  const handleCoverUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     try {
@@ -69,6 +71,32 @@ export default function AddPetPage() {
     } catch (err) {
       alert("Error processing image.");
     }
+  };
+
+  const handleGalleryUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + formData.gallery.length > 5) {
+      return alert("You can only add up to 5 gallery images.");
+    }
+
+    try {
+      const compressedImages = await Promise.all(
+        files.map(file => compressImage(file))
+      );
+      setFormData(prev => ({
+        ...prev, 
+        gallery: [...prev.gallery, ...compressedImages].slice(0, 5)
+      }));
+    } catch (err) {
+      alert("Error processing images.");
+    }
+  };
+
+  const removeGalleryImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      gallery: prev.gallery.filter((_, i) => i !== index)
+    }));
   };
 
   const handleChange = (e) => {
@@ -82,6 +110,7 @@ export default function AddPetPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-6">List a Pet</h1>
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-6">
         
+        {/* Basic Info */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
@@ -98,14 +127,7 @@ export default function AddPetPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Breed</label>
-            <select name="breed" value={formData.breed} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400">
-              <option value="Persian">Persian</option>
-              <option value="Siamese">Siamese</option>
-              <option value="Golden Retriever">Golden Retriever</option>
-              <option value="Husky">Husky</option>
-              <option value="Mixed">Mixed</option>
-              <option value="Other">Other</option>
-            </select>
+            <input required type="text" name="breed" value={formData.breed} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder="Breed..." />
           </div>
         </div>
 
@@ -136,6 +158,7 @@ export default function AddPetPage() {
           </div>
         </div>
 
+        {/* Features */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-3">Pet Features & Traits</label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -156,20 +179,43 @@ export default function AddPetPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Contact & Images */}
+        <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Contact Phone</label>
             <input required type="tel" name="phone" value={formData.phone} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder="+1 (555) 000-0000" />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Image Upload (Gallery)</label>
-            <input 
-              type="file" 
-              accept="image/*" 
-              onChange={handleImageChange} 
-              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100" 
-            />
-            {formData.image && <p className="text-xs text-green-600 mt-1 mt-2">Image attached!</p>}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-slate-50 p-4 rounded-2xl border-2 border-dashed border-slate-200">
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">1. Card Cover Image (Required)</label>
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleCoverUpload} 
+                className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-brand-500 file:text-white" 
+              />
+              {formData.image && <div className="mt-3 relative w-20 h-20"><img src={formData.image} className="w-full h-full object-cover rounded-lg shadow-sm" /></div>}
+            </div>
+
+            <div className="bg-slate-50 p-4 rounded-2xl border-2 border-dashed border-slate-200">
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">2. Additional Gallery Images (Max 5)</label>
+              <input 
+                type="file" 
+                multiple
+                accept="image/*" 
+                onChange={handleGalleryUpload} 
+                className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-slate-200 file:text-slate-700" 
+              />
+              <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+                {formData.gallery.map((img, i) => (
+                  <div key={i} className="relative shrink-0 w-16 h-16 group">
+                    <img src={img} className="w-full h-full object-cover rounded-lg shadow-sm" />
+                    <button type="button" onClick={() => removeGalleryImage(i)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"><CloseIcon size={12} /></button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 

@@ -61,6 +61,9 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+            <Link href="/dashboard/favorites" title="Favorites" className={`transition-colors p-2 hover:bg-brand-50 rounded-full ${pathname === '/dashboard/favorites' ? 'text-brand-500' : 'text-gray-600 hover:text-brand-500'}`}>
+              <Heart className="w-5 h-5" />
+            </Link>
           </div>
 
           <form onSubmit={handleSearch} className="hidden lg:flex items-center relative max-w-xs w-full ml-4">

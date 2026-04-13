@@ -10,6 +10,8 @@ import { useFavorites } from "@/context/FavoritesContext";
 import { use } from "react";
 import CopyPhoneButton from "@/components/CopyPhoneButton";
 
+import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+
 export default function PetDetailsPage({ params }) {
   const unwrappedParams = use(params);
   const router = useRouter();
@@ -18,6 +20,37 @@ export default function PetDetailsPage({ params }) {
   
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const handleMessage = async () => {
+    if (!user) {
+      alert("Please login to message the owner.");
+      router.push("/login");
+      return;
+    }
+    if (user.uid === pet.userId) return alert("This is your own listing!");
+
+    try {
+      const q = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
+      const snapshot = await getDocs(q);
+      const existing = snapshot.docs.find(d => d.data().participants.includes(pet.userId));
+
+      if (existing) {
+        router.push("/profile?tab=messages");
+      } else {
+        await addDoc(collection(db, "chats"), {
+          participants: [user.uid, pet.userId],
+          participantNames: {
+            [user.uid]: user.displayName || "User",
+            [pet.userId]: pet.name + " Owner"
+          },
+          lastMessage: "Started a conversation",
+          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp()
+        });
+        router.push("/profile?tab=messages");
+      }
+    } catch (err) { alert("Error starting chat."); }
+  };
 
   useEffect(() => {
     async function fetchPet() {
@@ -51,32 +84,59 @@ export default function PetDetailsPage({ params }) {
 
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-      {/* Header Image */}
-      <div className="h-64 md:h-96 w-full bg-brand-50 relative">
+      {/* Image Gallery Section */}
+      <div className="bg-slate-100 relative group min-h-[300px] md:min-h-[500px]">
         <button 
           onClick={() => router.back()}
-          className="absolute top-4 left-4 p-2 bg-white/80 rounded-full hover:bg-white text-gray-600 transition backdrop-blur-sm z-10 shadow-sm"
+          className="absolute top-4 left-4 p-2 bg-white/80 rounded-full hover:bg-white text-gray-600 transition backdrop-blur-sm z-10 shadow-md"
         >
           <ArrowLeft size={20} />
         </button>
         <button 
           onClick={() => toggleFavorite(pet.id)}
-          className={`absolute top-4 right-4 p-3 rounded-full transition backdrop-blur-sm z-10 shadow-sm ${
+          className={`absolute top-4 right-4 p-3 rounded-full transition backdrop-blur-sm z-10 shadow-md ${
             favorited ? "bg-brand-500 text-white" : "bg-white/80 text-gray-400 hover:text-brand-500 hover:bg-white"
           }`}
         >
           <Heart size={20} fill={favorited ? "currentColor" : "none"} />
         </button>
-        <div className="w-full h-full flex flex-col items-center justify-center text-brand-300">
+        
+        {/* Main Image View */}
+        <div className="w-full h-full flex items-center justify-center overflow-hidden">
           {pet.image ? (
-            <img src={pet.image} alt={pet.name} className="w-full h-full object-cover" />
+            <img 
+              src={pet.gallery && pet.gallery.length > 0 && pet.activeImage ? pet.activeImage : pet.image} 
+              alt={pet.name} 
+              className="w-full h-full object-contain max-h-[600px] transition duration-500" 
+            />
           ) : (
-            <>
+            <div className="flex flex-col items-center">
               <span className="text-4xl">🐾</span>
-              <p className="mt-2 text-sm font-medium">No Image Provided</p>
-            </>
+              <p className="mt-2 text-sm font-medium text-gray-400">No Image Provided</p>
+            </div>
           )}
         </div>
+
+        {/* Thumbnail Strip */}
+        {pet.gallery && pet.gallery.length > 0 && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 p-2 bg-black/20 backdrop-blur-md rounded-2xl border border-white/20">
+            <button 
+              onClick={() => setPet({...pet, activeImage: pet.image})}
+              className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition ${!pet.activeImage || pet.activeImage === pet.image ? 'border-brand-500 scale-110' : 'border-transparent opacity-70'}`}
+            >
+              <img src={pet.image} className="w-full h-full object-cover" />
+            </button>
+            {pet.gallery.map((img, idx) => (
+              <button 
+                key={idx}
+                onClick={() => setPet({...pet, activeImage: img})}
+                className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition ${pet.activeImage === img ? 'border-brand-500 scale-110' : 'border-transparent opacity-70'}`}
+              >
+                <img src={img} className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="p-8 md:p-12">
@@ -143,7 +203,10 @@ export default function PetDetailsPage({ params }) {
               ) : (
                 <div className="space-y-4">
                   <CopyPhoneButton phone={pet.phone} />
-                  <button className="w-full border-2 border-brand-500 text-brand-500 font-bold py-3 rounded-xl hover:bg-brand-50 transition">
+                  <button 
+                    onClick={handleMessage}
+                    className="w-full border-2 border-brand-500 text-brand-500 font-bold py-3 rounded-xl hover:bg-brand-50 transition"
+                  >
                     Message Owner
                   </button>
                 </div>

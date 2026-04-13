@@ -7,10 +7,47 @@ import { ArrowLeft, Phone, MapPin, Moon, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import CopyPhoneButton from "@/components/CopyPhoneButton";
 
+import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+
 export default function HostelDetails({ params }) {
   const unwrappedParams = use(params);
+  const router = useRouter();
+  const { user } = useAuth();
   const [hostel, setHostel] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const handleMessage = async () => {
+    if (!user) {
+      alert("Please login to message the owner.");
+      router.push("/login");
+      return;
+    }
+    if (user.uid === hostel.userId) return alert("This is your own listing!");
+
+    try {
+      const q = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
+      const snapshot = await getDocs(q);
+      const existing = snapshot.docs.find(d => d.data().participants.includes(hostel.userId));
+
+      if (existing) {
+        router.push("/profile?tab=messages");
+      } else {
+        await addDoc(collection(db, "chats"), {
+          participants: [user.uid, hostel.userId],
+          participantNames: {
+            [user.uid]: user.displayName || "User",
+            [hostel.userId]: hostel.name + " Owner"
+          },
+          lastMessage: "Started a conversation",
+          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp()
+        });
+        router.push("/profile?tab=messages");
+      }
+    } catch (err) { alert("Error starting chat."); }
+  };
 
   useEffect(() => {
     async function fetchHostel() {
@@ -39,11 +76,37 @@ export default function HostelDetails({ params }) {
       </Link>
       
       <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 flex flex-col md:flex-row">
-        <div className="md:w-1/2 p-8 bg-purple-50 flex items-center justify-center min-h-[300px]">
-          {hostel.image ? (
-            <img src={hostel.image} alt={hostel.name} className="w-full h-auto object-cover rounded-2xl shadow-md" />
-          ) : (
-            <span className="text-8xl">🏡</span>
+        <div className="md:w-1/2 p-2 bg-slate-50 relative min-h-[400px]">
+          <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-2xl">
+            {hostel.image ? (
+              <img 
+                src={hostel.gallery && hostel.gallery.length > 0 && hostel.activeImage ? hostel.activeImage : hostel.image} 
+                className="w-full h-full object-cover transition duration-500 shadow-md" 
+              />
+            ) : (
+              <span className="text-8xl">🏡</span>
+            )}
+          </div>
+
+          {/* Gallery Thumbnails */}
+          {hostel.gallery && hostel.gallery.length > 0 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-1.5 bg-white/20 backdrop-blur-md rounded-xl border border-white/30">
+              <button 
+                onClick={() => setHostel({...hostel, activeImage: hostel.image})}
+                className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition ${!hostel.activeImage || hostel.activeImage === hostel.image ? 'border-brand-500 scale-105' : 'border-transparent opacity-70'}`}
+              >
+                <img src={hostel.image} className="w-full h-full object-cover" />
+              </button>
+              {hostel.gallery.map((img, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => setHostel({...hostel, activeImage: img})}
+                  className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition ${hostel.activeImage === img ? 'border-brand-500 scale-105' : 'border-transparent opacity-70'}`}
+                >
+                  <img src={img} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
           )}
         </div>
         
@@ -83,7 +146,15 @@ export default function HostelDetails({ params }) {
           
           <div className="bg-gray-50 p-6 rounded-2xl mt-auto">
             <h3 className="font-bold text-gray-900 mb-4">Book a Stay</h3>
-            <CopyPhoneButton phone={hostel.phone} />
+            <div className="space-y-3">
+              <CopyPhoneButton phone={hostel.phone} />
+              <button 
+                onClick={handleMessage}
+                className="w-full bg-white border-2 border-brand-500 text-brand-500 font-bold py-3 rounded-xl hover:bg-brand-50 transition shadow-sm"
+              >
+                Message Owner
+              </button>
+            </div>
           </div>
         </div>
       </div>
