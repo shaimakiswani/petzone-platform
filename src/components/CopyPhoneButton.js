@@ -29,7 +29,7 @@ export default function CopyPhoneButton({ phone }) {
         <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-0.5 leading-none">
           {copied ? "Copied!" : "Phone Number (Click to Copy)"}
         </p>
-        <p className="text-sm sm:text-base font-black text-slate-900 truncate">
+        <p className="text-sm sm:text-base font-black text-slate-900 leading-tight">
           {phone || "Not Provided"}
         </p>
       </div>

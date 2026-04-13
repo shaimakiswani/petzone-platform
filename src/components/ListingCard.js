@@ -19,6 +19,11 @@ export default function ListingCard({ item, type = "pets" }) {
       return;
     }
 
+    if (!item.userId) {
+      alert("Messaging is not available for this listing. Please use the phone number provided.");
+      return;
+    }
+
     if (user.uid === item.userId) {
       alert("This is your own listing!");
       return;
@@ -154,13 +159,13 @@ export default function ListingCard({ item, type = "pets" }) {
 
         {/* Location & Contact area (Smaller, dim) */}
         <div className="mt-auto space-y-4">
-           <div className="flex items-center gap-4 text-gray-400 text-xs">
+           <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-gray-400 text-xs">
               <div className="flex items-center gap-1 min-w-0">
                 <MapPin size={14} className="shrink-0" />
                 <span className="truncate">{item.location || "Online"}</span>
               </div>
               {item.phone && (
-                <div className="flex items-center gap-1 shrink-0 bg-gray-50 px-2 py-0.5 rounded-md font-bold text-gray-700 border border-gray-100">
+                <div className="flex items-center gap-1 shrink-0 bg-brand-50/50 px-2 py-0.5 rounded-md font-black text-brand-700 border border-brand-100/30">
                   {item.phone}
                 </div>
               )}
@@ -176,7 +181,8 @@ export default function ListingCard({ item, type = "pets" }) {
               </Link>
               <button 
                 onClick={handleMessage}
-                className="flex items-center justify-center gap-2 bg-brand-500 text-white font-extrabold py-3 rounded-2xl hover:bg-brand-600 transition duration-300 shadow-lg shadow-brand-500/20 text-xs tracking-tight"
+                disabled={!item.userId}
+                className={`flex items-center justify-center gap-2 bg-brand-500 text-white font-extrabold py-3 rounded-2xl hover:bg-brand-600 transition duration-300 shadow-lg shadow-brand-500/20 text-xs tracking-tight ${!item.userId ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
               >
                 Message
               </button>
