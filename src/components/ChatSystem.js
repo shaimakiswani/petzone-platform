@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { db } from "@/firebase/config";
 import { 
   collection, 
@@ -29,12 +29,16 @@ export default function ChatSystem() {
   const chatIdFromUrl = searchParams.get("chatId");
 
   const [chats, setChats] = useState([]);
-  const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [resolvedNames, setResolvedNames] = useState({});
   const scrollRef = useRef();
+
+  // Derived state: Active chat is determined solely by the URL
+  const activeChat = useMemo(() => {
+    return chats.find(c => c.id === chatIdFromUrl) || null;
+  }, [chats, chatIdFromUrl]);
 
   // 1. Fetch all chats for the current user
   useEffect(() => {
@@ -59,18 +63,11 @@ export default function ChatSystem() {
       });
 
       setChats(sortedList);
-      
-      // Persistence: Set active chat from URL if available (Only on initial load)
-      if (chatIdFromUrl && !activeChat && loading) {
-        const found = sortedList.find(c => c.id === chatIdFromUrl);
-        if (found) setActiveChat(found);
-      }
-      
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [user, chatIdFromUrl, activeChat]);
+  }, [user]);
 
   // 1.5. Dynamic Name Resolution: Fetch real names for all chat participants
   useEffect(() => {
@@ -123,16 +120,14 @@ export default function ChatSystem() {
   }, [activeChat, user]);
 
   const handleSelectChat = (chat) => {
-    setActiveChat(chat);
-    // Update URL without reloading to persist state
+    // Navigate will trigger the useMemo and state updates
     const params = new URLSearchParams(searchParams);
     params.set("chatId", chat.id);
     router.push(`/profile?${params.toString()}`, { scroll: false });
   };
 
   const handleCloseChat = () => {
-    setActiveChat(null);
-    // Clear URL params
+    // Simply removing the ID from the URL closes the chat deterministically
     const params = new URLSearchParams(searchParams);
     params.delete("chatId");
     router.push(`/profile?${params.toString()}`, { scroll: false });
