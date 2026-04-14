@@ -60,8 +60,8 @@ export default function ChatSystem() {
 
       setChats(sortedList);
       
-      // Persistence: Set active chat from URL if available
-      if (chatIdFromUrl && !activeChat) {
+      // Persistence: Set active chat from URL if available (Only on initial load)
+      if (chatIdFromUrl && !activeChat && loading) {
         const found = sortedList.find(c => c.id === chatIdFromUrl);
         if (found) setActiveChat(found);
       }
@@ -127,6 +127,14 @@ export default function ChatSystem() {
     // Update URL without reloading to persist state
     const params = new URLSearchParams(searchParams);
     params.set("chatId", chat.id);
+    router.push(`/profile?${params.toString()}`, { scroll: false });
+  };
+
+  const handleCloseChat = () => {
+    setActiveChat(null);
+    // Clear URL params
+    const params = new URLSearchParams(searchParams);
+    params.delete("chatId");
     router.push(`/profile?${params.toString()}`, { scroll: false });
   };
 
@@ -245,7 +253,12 @@ export default function ChatSystem() {
           <>
             {/* Header */}
             <div className="p-4 border-b border-gray-100 flex items-center gap-3">
-              <button onClick={() => setActiveChat(null)} className="md:hidden p-1 text-gray-400"><ChevronLeft /></button>
+              <button 
+                onClick={handleCloseChat} 
+                className="md:hidden p-1.5 -ml-1 text-gray-400 hover:text-brand-500 hover:bg-brand-50 rounded-lg transition"
+              >
+                <ChevronLeft size={24} />
+              </button>
               <div className="w-8 h-8 bg-brand-50 rounded-full flex items-center justify-center text-brand-500"><User size={16} /></div>
               <div className="font-bold text-gray-900">{getOtherParticipantName(activeChat)}</div>
             </div>
