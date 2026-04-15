@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/firebase/config";
-import { collection, addDoc } from "firebase/firestore";
+import { doc, getDoc, collection, addDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { compressImage } from "@/utils/imageCompressor";
 import { PET_DATA } from "@/constants/petData";
+import { X as CloseIcon, Mars, Venus } from "lucide-react";
 
 export default function AddPetPage() {
   const { user, loading } = useAuth();

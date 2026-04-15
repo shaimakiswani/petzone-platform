@@ -111,7 +111,7 @@ function SearchContent() {
       <div className="mb-10 text-center">
         <h1 className="text-4xl font-black text-gray-900 mb-2">Platform Search</h1>
         {q ? (
-          <p className="text-gray-500 font-medium">Found {totalResults} matches for "{q}"</p>
+          <p className="text-gray-500 font-medium">Found {totalResults} matches for &quot;{q}&quot;</p>
         ) : (
           <p className="text-gray-500">Discover everything for your pet</p>
         )}
@@ -127,8 +127,8 @@ function SearchContent() {
           {totalResults === 0 && q && (
             <div className="text-center py-24 bg-white rounded-[40px] border border-gray-100 shadow-sm">
               <span className="text-7xl block mb-6 animate-bounce">🕵️‍♂️</span>
-              <p className="text-gray-500 text-xl font-medium">We couldn't find anything matching your search.</p>
-              <p className="text-gray-400 text-sm mt-1">Try searching for "Amman", "Cat", or "Vaccination".</p>
+              <p className="text-gray-500 text-xl font-medium">We couldn&apos;t find anything matching your search.</p>
+              <p className="text-gray-400 text-sm mt-1">Try searching for &quot;Amman&quot;, &quot;Cat&quot;, or &quot;Vaccination&quot;.</p>
             </div>
           )}
 

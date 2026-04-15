@@ -207,7 +207,7 @@ function ProfileContent() {
             ) : myAds.length === 0 ? (
               <div className="text-center py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                 <span className="text-4xl block mb-2">📦</span>
-                <p className="text-gray-500 font-medium">You haven't posted any listings yet.</p>
+                <p className="text-gray-500 font-medium">You haven&apos;t posted any listings yet.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

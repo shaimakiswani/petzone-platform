@@ -17,10 +17,7 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (!user) {
-      setUnreadCount(0);
-      return;
-    }
+    if (!user) return;
 
     const q = query(
       collection(db, "chats"),
@@ -31,7 +28,11 @@ export default function Navbar() {
       setUnreadCount(snapshot.docs.length);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      // Reset unread count on cleanup to avoid set-state-in-body error
+      setUnreadCount(0);
+    };
   }, [user]);
 
   const handleSearch = (e) => {

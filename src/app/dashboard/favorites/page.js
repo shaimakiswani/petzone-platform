@@ -66,7 +66,7 @@ export default function FavoritesPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-12">
         <h1 className="text-4xl font-black text-gray-900 mb-2">My Wishlist ({items.length})</h1>
-        <p className="text-gray-500">Items and pets you've saved for later.</p>
+        <p className="text-gray-500">Items and pets you&apos;ve saved for later.</p>
       </div>
 
       {items.length === 0 ? (

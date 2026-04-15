@@ -135,10 +135,7 @@ export default function ChatSystem() {
 
   // 2. Fetch messages for the active chat
   useEffect(() => {
-    if (!activeChat) {
-      setMessages([]);
-      return;
-    }
+    if (!activeChat) return;
 
     const q = query(
       collection(db, "chats", activeChat.id, "messages"),
@@ -155,7 +152,11 @@ export default function ChatSystem() {
       setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      // Clearing messages in cleanup to avoid set-state-in-body error
+      setMessages([]);
+    };
   }, [activeChat]);
 
   const handleSendMessage = async (e) => {
