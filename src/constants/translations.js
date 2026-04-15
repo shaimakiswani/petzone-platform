@@ -41,7 +41,21 @@ export const translations = {
       error: "Something went wrong",
       back: "Back",
       details: "Details",
-      message: "Message"
+      message: "Message",
+      free: "Free",
+      verified: "Verified",
+      safe: "Safe Stay",
+      premium: "Premium"
+    },
+
+    // Pets Page
+    pets_page: {
+      title: "Explore Pets",
+      desc: "Find your new companion from thousands of rescues.",
+      search_placeholder: "Search pets, breeds, city...",
+      no_pets: "No pets found",
+      no_pets_desc: "Try adjusting your search criteria!",
+      loading_pets: "Loading pets..."
     },
     
     // Home Page
@@ -87,12 +101,17 @@ export const translations = {
       back_supplies: "Back to Supplies",
       overnight: "Overnight Stay",
       services: "Included Services",
+      treatments: "Available Treatments",
+      expertise: "Expertise & Notes",
+      contact_reception: "Contact Reception",
+      rating: "Rating",
       description: "Description",
       contact: "Contact Hostel",
       contact_clinic: "Contact Clinic",
       message_owner: "Message Owner",
       no_desc: "No description provided.",
       std_services: "Standard services included.",
+      std_clinic: "Professional veterinary services provided.",
       price_night: "night"
     }
   },
@@ -138,7 +157,21 @@ export const translations = {
       error: "حدث خطأ ما",
       back: "رجوع",
       details: "التفاصيل",
-      message: "تواصل"
+      message: "تواصل",
+      free: "مجاناً",
+      verified: "موثق",
+      safe: "إقامة آمنة",
+      premium: "مميز"
+    },
+
+    // Pets Page
+    pets_page: {
+      title: "استكشف الحيوانات",
+      desc: "ابحث عن صديقك الجديد من بين آلاف الحيوانات.",
+      search_placeholder: "ابحث عن سلالة، مدينة...",
+      no_pets: "لم يتم العثور على حيوانات",
+      no_pets_desc: "حاول تغيير معايير البحث الخاصة بك!",
+      loading_pets: "جاري تحميل الحيوانات..."
     },
     
     // Home Page
@@ -184,13 +217,18 @@ export const translations = {
       back_supplies: "العودة للمستلزمات",
       overnight: "إقامة ليلة كاملة",
       services: "الخدمات المشمولة",
+      treatments: "العلاجات المتوفرة",
+      expertise: "الخبرات والملاحظات",
+      contact_reception: "تواصل مع الاستقبال",
+      rating: "التقييم",
       description: "الوصف",
       contact: "تواصل مع الفندق",
       contact_clinic: "تواصل مع العيادة",
       message_owner: "مراسلة صاحب الإعلان",
       no_desc: "لا يوجد وصف متوفر.",
       std_services: "الخدمات الأساسية مشمولة.",
+      std_clinic: "خدمات بيطرية احترافية مقدمة.",
       price_night: "ليلة"
     }
   }
-};
+}
