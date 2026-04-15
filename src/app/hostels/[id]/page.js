@@ -17,11 +17,13 @@ import Link from "next/link";
 import CopyPhoneButton from "@/components/CopyPhoneButton";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function HostelDetails({ params }) {
   const unwrappedParams = use(params);
   const router = useRouter();
   const { user } = useAuth();
+  const { t, isAr } = useLanguage();
   const [hostel, setHostel] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -78,13 +80,13 @@ export default function HostelDetails({ params }) {
     fetchHostel();
   }, [unwrappedParams.id]);
 
-  if (loading) return <div className="text-center py-20 text-brand-500 font-bold">Loading Hostel...</div>;
+  if (loading) return <div className="text-center py-20 text-brand-500 font-bold">{t('common.loading')}</div>;
   if (!hostel) return <div className="text-center py-20 text-gray-500">Hostel not found.</div>;
 
   return (
-    <div className="max-w-4xl mx-auto py-8">
-      <Link href="/hostels" className="flex items-center text-gray-500 hover:text-brand-500 transition mb-6 w-fit">
-        <ArrowLeft size={20} className="mr-2" /> Back to Hostels
+    <div className={`max-w-4xl mx-auto py-8 ${isAr ? 'rtl' : 'ltr'}`}>
+      <Link href="/hostels" className={`flex items-center text-gray-500 hover:text-brand-500 transition mb-6 w-fit ${isAr ? 'flex-row-reverse' : ''}`}>
+        <ArrowLeft size={20} className={isAr ? 'ml-2 rotate-180' : 'mr-2'} /> {t('details.back_hostels')}
       </Link>
       
       <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 flex flex-col md:flex-row">
@@ -122,43 +124,45 @@ export default function HostelDetails({ params }) {
           )}
         </div>
         
-        <div className="md:w-1/2 p-8 flex flex-col">
-          <div className="flex items-center gap-2 mb-4 text-purple-600 bg-purple-100 w-fit px-4 py-1.5 rounded-full font-bold">
+        <div className={`md:w-1/2 p-8 flex flex-col ${isAr ? 'text-right' : 'text-left'}`}>
+          <div className={`flex items-center gap-2 mb-4 text-purple-600 bg-purple-100 w-fit px-4 py-1.5 rounded-full font-bold ${isAr ? 'flex-row-reverse' : ''}`}>
             <Moon size={18} />
-            <span>Overnight Stay</span>
+            <span>{t('details.overnight')}</span>
           </div>
           
           <h1 className="text-4xl font-extrabold text-gray-900 mb-4">{hostel.name}</h1>
-          <p className="text-3xl font-black text-brand-500 mb-6">${hostel.price} <span className="text-lg font-normal text-gray-500">/ night</span></p>
+          <p className={`text-3xl font-black text-brand-500 mb-6 ${isAr ? 'flex flex-row-reverse gap-2' : ''}`}>
+            ${hostel.price} <span className="text-lg font-normal text-gray-500">/ {t('details.price_night')}</span>
+          </p>
 
-          <div className="flex items-center gap-2 text-gray-600 mb-6">
+          <div className={`flex items-center gap-2 text-gray-600 mb-6 ${isAr ? 'flex-row-reverse' : ''}`}>
             <MapPin size={20} />
             <span className="text-lg">{hostel.location}</span>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Included Services</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">{t('details.services')}</h2>
             <div className="grid grid-cols-2 gap-3">
               {hostel.features?.map((feature, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-gray-700 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100">
+                <div key={idx} className={`flex items-center gap-2 text-gray-700 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100 ${isAr ? 'flex-row-reverse' : ''}`}>
                   <CheckCircle2 size={16} className="text-brand-500" />
                   <span className="text-sm font-medium">{feature}</span>
                 </div>
               ))}
               {(!hostel.features || hostel.features.length === 0) && (
-                <p className="text-gray-400 text-sm">Standard hostel services included.</p>
+                <p className="text-gray-400 text-sm">{t('details.std_services')}</p>
               )}
             </div>
           </div>
           
           <div className="mb-8 flex-1">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Description</h2>
-            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{hostel.description || "No description provided."}</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">{t('details.description')}</h2>
+            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{hostel.description || t('details.no_desc')}</p>
           </div>
           
           <div className="bg-gray-50 p-6 rounded-3xl mt-auto shadow-inner border border-gray-100">
-            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Phone size={18} className="text-brand-500" /> Contact Hostel
+            <h3 className={`font-bold text-gray-900 mb-4 flex items-center gap-2 ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+              <Phone size={18} className="text-brand-500" /> {t('details.contact_hostel')}
             </h3>
             <div className="space-y-3">
               <CopyPhoneButton phone={hostel.phone} />
@@ -166,7 +170,7 @@ export default function HostelDetails({ params }) {
                 onClick={handleMessage}
                 className="w-full bg-white border-2 border-brand-500 text-brand-500 font-bold py-3 rounded-xl hover:bg-brand-50 transition shadow-sm"
               >
-                Message Owner
+                {t('details.message_owner')}
               </button>
             </div>
           </div>

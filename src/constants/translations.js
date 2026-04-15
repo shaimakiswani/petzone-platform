@@ -56,6 +56,44 @@ export const translations = {
         { title: "Verified Clinics", desc: "Connect with certified veterinarians." },
         { title: "Lost & Found", desc: "Report missing pets or help others find theirs." }
       ]
+    },
+
+    // Category Names
+    categories: {
+      all: "All",
+      dog: "Dog",
+      cat: "Cat",
+      bird: "Bird",
+      fish: "Fish",
+      rabbit: "Rabbit",
+      rodent: "Rodent",
+      reptile: "Reptile",
+      livestock: "Livestock",
+      accessories: "Accessories",
+      housing: "Housing & Carriers",
+      comfort: "Comfort & Bedding",
+      toys: "Toys",
+      hygiene: "Hygiene & Grooming",
+      food: "Food & Feeding",
+      bird_eq: "Bird Equipment",
+      aquarium: "Aquarium Decor",
+      other: "Other"
+    },
+
+    // Detail Pages
+    details: {
+      back_hostels: "Back to Hostels",
+      back_clinics: "Back to Clinics",
+      back_supplies: "Back to Supplies",
+      overnight: "Overnight Stay",
+      services: "Included Services",
+      description: "Description",
+      contact: "Contact Hostel",
+      contact_clinic: "Contact Clinic",
+      message_owner: "Message Owner",
+      no_desc: "No description provided.",
+      std_services: "Standard services included.",
+      price_night: "night"
     }
   },
   ar: {
@@ -115,6 +153,44 @@ export const translations = {
         { title: "عيادات معتمدة", desc: "تواصل مع أفضل الأطباء البيطريين المعتمدين." },
         { title: "مفقود وموجود", desc: "أبلغ عن الحيوانات المفقودة أو ساعد الآخرين في العثور على أليفهم." }
       ]
+    },
+
+    // Category Names
+    categories: {
+      all: "الكل",
+      dog: "كلاب",
+      cat: "قطط",
+      bird: "طيور",
+      fish: "أسماك",
+      rabbit: "أرانب",
+      rodent: "قوارض",
+      reptile: "زواحف",
+      livestock: "مواشي",
+      accessories: "إكسسوارات",
+      housing: "بيوت وأماكن سكن",
+      comfort: "أشياء الراحة",
+      toys: "ألعاب",
+      hygiene: "العناية والنظافة",
+      food: "أدوات الطعام",
+      bird_eq: "مستلزمات طيور",
+      aquarium: "ديكور أحواض",
+      other: "أخرى"
+    },
+
+    // Detail Pages
+    details: {
+      back_hostels: "العودة للفنادق",
+      back_clinics: "العودة للعيادات",
+      back_supplies: "العودة للمستلزمات",
+      overnight: "إقامة ليلة كاملة",
+      services: "الخدمات المشمولة",
+      description: "الوصف",
+      contact: "تواصل مع الفندق",
+      contact_clinic: "تواصل مع العيادة",
+      message_owner: "مراسلة صاحب الإعلان",
+      no_desc: "لا يوجد وصف متوفر.",
+      std_services: "الخدمات الأساسية مشمولة.",
+      price_night: "ليلة"
     }
   }
 };
