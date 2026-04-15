@@ -6,8 +6,11 @@ import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import Link from "next/link";
 import { useFavorites } from "@/context/FavoritesContext";
+import ListingCard from "@/components/ListingCard";
+import { SUPPLY_DATA } from "@/constants/petData";
+import { useLanguage } from "@/context/LanguageContext";
 
-const CATEGORIES = ["All", "Food", "Toys", "Accessories", "Medical"];
+const CATEGORIES = ["All", ...Object.keys(SUPPLY_DATA)];
 
 export default function SuppliesPage() {
   const [supplies, setSupplies] = useState([]);
@@ -15,6 +18,20 @@ export default function SuppliesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { t, isAr } = useLanguage();
+
+  const categoryMap = {
+    "All": "all",
+    "Accessories": "accessories",
+    "Housing & Carriers": "housing",
+    "Comfort & Bedding": "comfort",
+    "Toys": "toys",
+    "Hygiene & Grooming": "hygiene",
+    "Food & Feeding": "food",
+    "Bird Equipment": "bird_eq",
+    "Aquarium Decor": "aquarium",
+    "Other": "other"
+  };
 
   useEffect(() => {
     async function fetchSupplies() {
@@ -44,20 +61,20 @@ export default function SuppliesPage() {
   }, [supplies, selectedCategory, searchTerm]);
 
   return (
-    <div>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Pet Supplies</h1>
+    <div className={isAr ? 'rtl' : 'ltr'}>
+      <div className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+        <div className={isAr ? 'text-right' : 'text-left'}>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('nav_links.supplies')}</h1>
           <p className="text-gray-500">Everything your pet needs, from food to toys.</p>
         </div>
         <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className={`absolute ${isAr ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5`} />
           <input 
             type="text" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search supplies..." 
-            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-brand-100"
+            placeholder={t('nav_search')}
+            className={`w-full ${isAr ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4'} py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-brand-100`}
           />
         </div>
       </div>
@@ -73,13 +90,13 @@ export default function SuppliesPage() {
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
             }`}
           >
-            {cat}
+            {t(`categories.${categoryMap[cat] || 'other'}`)}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div className="text-center py-20 text-gray-500">Loading supplies...</div>
+        <div className="text-center py-20 text-gray-500">{t('common.loading')}</div>
       ) : filteredItems.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-3xl border border-gray-100">
           <h2 className="text-xl font-bold text-gray-700 mb-2">No items found</h2>
@@ -89,26 +106,9 @@ export default function SuppliesPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredItems.map(item => (
-             <div key={item.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition flex flex-col group relative">
-              <div className="h-48 bg-orange-50 relative flex items-center justify-center overflow-hidden">
-                {item.image ? (
-                  <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
-                ) : (
-                  <span className="text-6xl group-hover:scale-110 transition duration-500 mb-2">🛍️</span>
-                )}
-                <span className="absolute top-4 left-4 text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded-md z-10">{item.category}</span>
-              </div>
-              <div className="p-5 flex-1 flex flex-col">
-                <h3 className="text-xl font-bold text-gray-900 mb-1">{item.name}</h3>
-                <span className="text-xl font-black text-brand-600 mb-3 block">${item.price}</span>
-                <p className="text-gray-500 text-sm mb-4 line-clamp-2 flex-1">{item.description}</p>
-                <Link href={`/supplies/${item.id}`} className="w-full bg-gray-50 hover:bg-orange-50 hover:text-orange-600 text-gray-700 font-bold py-3 rounded-xl transition mt-auto text-center block">
-                  Contact Seller
-                </Link>
-              </div>
-             </div>
+            <ListingCard key={item.id} item={item} type="supplies" />
           ))}
         </div>
       )}

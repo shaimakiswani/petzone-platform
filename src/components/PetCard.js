@@ -1,10 +1,67 @@
 import { Heart, MapPin, Mars, Venus } from "lucide-react";
 import Link from "next/link";
 import { useFavorites } from "@/context/FavoritesContext";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
+import { db } from "@/firebase/config";
 
 export default function PetCard({ pet, type = "pets" }) {
+  const { user } = useAuth();
+  const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(pet.id);
+
+  const handleMessage = async () => {
+    if (!user) {
+      alert("Please login to message the owner.");
+      router.push("/login");
+      return;
+    }
+
+    if (user.uid === pet.userId) {
+      alert("This is your own listing!");
+      return;
+    }
+
+    try {
+      // Check for existing chat
+      const chatRef = collection(db, "chats");
+      const q = query(chatRef, 
+        where("participants", "array-contains", user.uid)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      let existingChat = querySnapshot.docs.find(doc => 
+        doc.data().participants.includes(pet.userId)
+      );
+
+      if (existingChat) {
+        router.push(`/profile?tab=messages&chatId=${existingChat.id}`);
+      } else {
+        // Fetch real owner name from profile
+        const ownerSnap = await getDoc(doc(db, "users", pet.userId));
+        const ownerName = ownerSnap.exists() ? ownerSnap.data().name : (pet.userDisplayName || "Owner");
+
+        // Create new chat
+        const docRef = await addDoc(collection(db, "chats"), {
+          participants: [user.uid, pet.userId],
+          participantNames: {
+            [user.uid]: user.displayName || "User",
+            [pet.userId]: ownerName
+          },
+          lastMessage: "Started a conversation",
+          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp(),
+          unreadBy: [pet.userId]
+        });
+        router.push(`/profile?tab=messages&chatId=${docRef.id}`);
+      }
+    } catch (err) {
+      console.error("Message Error:", err);
+      alert("Could not start chat. Please try again.");
+    }
+  };
 
   return (
     <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition group relative">
@@ -44,14 +101,24 @@ export default function PetCard({ pet, type = "pets" }) {
           </span>
         </div>
 
-        <div className="flex items-center gap-1 text-gray-400 text-sm mb-4">
-          <MapPin size={14} />
+        <div className="flex items-center gap-1 text-gray-400 text-xs mb-4">
+          <MapPin size={12} />
           <span>{pet.location}</span>
+          <span className="mx-2 text-gray-200">|</span>
+          <span className="text-gray-700 font-medium">{pet.phone}</span>
         </div>
 
-        <Link href={`/${type}/${pet.id}`} className="block w-full text-center bg-gray-50 hover:bg-brand-50 hover:text-brand-600 text-gray-700 font-medium py-3 rounded-xl transition">
-          View Details
-        </Link>
+        <div className="grid grid-cols-2 gap-2">
+          <Link href={`/${type}/${pet.id}`} className="block text-center bg-gray-50 dark:bg-slate-800 hover:bg-brand-50 hover:text-brand-600 text-gray-700 dark:text-gray-300 font-bold py-2.5 rounded-xl transition text-sm">
+            Details
+          </Link>
+          <button 
+            onClick={handleMessage}
+            className="flex items-center justify-center gap-2 bg-brand-500 text-white font-bold py-2.5 rounded-xl hover:bg-brand-600 transition shadow-sm shadow-brand-500/20 text-sm"
+          >
+            Message
+          </button>
+        </div>
       </div>
     </div>
   );

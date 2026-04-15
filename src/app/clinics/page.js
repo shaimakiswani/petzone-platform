@@ -5,6 +5,7 @@ import { Search, MapPin, Star } from "lucide-react";
 import Link from "next/link";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/firebase/config";
+import ListingCard from "@/components/ListingCard";
 
 export default function ClinicsPage() {
   const [clinics, setClinics] = useState([]);
@@ -61,27 +62,9 @@ export default function ClinicsPage() {
           <h2 className="text-xl font-bold text-gray-700 mb-2">No clinics found</h2>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredItems.map(clinic => (
-             <div key={clinic.id} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-xl transition">
-               {clinic.image ? (
-                 <img src={clinic.image} alt={clinic.name} className="w-full h-40 object-cover rounded-2xl mb-4" />
-               ) : (
-                 <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-4 text-2xl">🏥</div>
-               )}
-               <h3 className="text-xl font-bold text-gray-900 mb-1">{clinic.name}</h3>
-               <div className="flex items-center text-sm text-yellow-500 font-bold mb-3">
-                 <Star size={16} className="fill-current mr-1" />
-                 {clinic.rating || "4.8"} (Reviews)
-               </div>
-               <div className="flex items-start gap-2 text-gray-500 text-sm mb-4">
-                 <MapPin size={16} className="mt-0.5 shrink-0" />
-                 <p>{clinic.location}</p>
-               </div>
-               <Link href={`/clinics/${clinic.id}`} className="mt-6 w-full block text-center bg-blue-50 text-blue-600 font-bold py-2 rounded-xl hover:bg-blue-100 transition">
-                View Details
-              </Link>
-             </div>
+            <ListingCard key={clinic.id} item={clinic} type="clinics" />
           ))}
         </div>
       )}

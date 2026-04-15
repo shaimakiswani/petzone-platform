@@ -2,16 +2,41 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
-import { PawPrint, Heart, User, Search, ShoppingBag, PlusCircle, Menu, X as CloseIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { PawPrint, Heart, User, Search, ShoppingBag, PlusCircle, Menu, MessageSquare, X as CloseIcon } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "@/firebase/config";
+
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
+  const { t, isAr } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(
+      collection(db, "chats"),
+      where("unreadBy", "array-contains", user.uid)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setUnreadCount(snapshot.docs.length);
+    });
+
+    return () => {
+      unsubscribe();
+      // Reset unread count on cleanup to avoid set-state-in-body error
+      setUnreadCount(0);
+    };
+  }, [user]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -23,10 +48,10 @@ export default function Navbar() {
   };
 
   const links = [
-    { href: "/pets", label: "Pets" },
-    { href: "/supplies", label: "Supplies" },
-    { href: "/clinics", label: "Clinics" },
-    { href: "/hostels", label: "Hostels" },
+    { href: "/pets", label: t('nav_links.pets') },
+    { href: "/supplies", label: t('nav_links.supplies') },
+    { href: "/clinics", label: t('nav_links.clinics') },
+    { href: "/hostels", label: t('nav_links.hostels') },
   ];
 
   return (
@@ -64,13 +89,13 @@ export default function Navbar() {
           </div>
 
           <form onSubmit={handleSearch} className="hidden lg:flex items-center relative max-w-xs w-full ml-4">
-            <Search className="absolute left-3 text-gray-400 w-4 h-4" />
+            <Search className={`absolute ${isAr ? 'right-3' : 'left-3'} text-gray-400 w-4 h-4`} />
             <input 
               type="text" 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search anything..." 
-              className="w-full pl-9 pr-4 py-1.5 text-sm border border-gray-200 dark:border-slate-700 rounded-full focus:outline-none focus:ring-2 focus:ring-brand-100 bg-gray-50 dark:bg-slate-800 focus:bg-white transition"
+              placeholder={t('nav_search')} 
+              className={`w-full ${isAr ? 'pr-9 pl-4' : 'pl-9 pr-4'} py-1.5 text-sm border border-gray-200 dark:border-slate-700 rounded-full focus:outline-none focus:ring-2 focus:ring-brand-100 bg-gray-50 dark:bg-slate-800 focus:bg-white transition`}
             />
           </form>
 
@@ -78,18 +103,31 @@ export default function Navbar() {
           <div className="flex gap-2 sm:gap-4 items-center">
             <Link href="/dashboard/add" className="text-brand-500 hover:text-brand-600 flex items-center gap-1 text-sm font-medium">
               <PlusCircle className="w-5 h-5" />
-              <span className="hidden sm:inline">Post Ad</span>
+              <span className="hidden sm:inline">{t('nav_links.post_ad')}</span>
+            </Link>
+
+            <Link href="/dashboard/favorites" title="Favorites" className="text-gray-600 hover:text-brand-500 transition-colors p-1.5 hover:bg-brand-50 rounded-lg">
+              <Heart className="w-5 h-5" />
+            </Link>
+
+            <Link href="/profile?tab=messages" title="Messages" className="text-gray-600 hover:text-brand-500 transition-colors p-1.5 hover:bg-brand-50 rounded-lg relative">
+              <MessageSquare className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className={`absolute -top-0.5 ${isAr ? '-left-0.5' : '-right-0.5'} bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white`}>
+                  {unreadCount}
+                </span>
+              )}
             </Link>
             
             {user ? (
               <Link href="/profile" className="bg-brand-50 dark:bg-brand-900/30 px-3 sm:px-4 py-2 rounded-full text-brand-600 dark:text-brand-400 font-medium text-sm hover:bg-brand-100 transition flex items-center gap-2">
                 <User className="w-4 h-4" />
-                <span className="hidden xs:inline">Profile</span>
+                <span className="hidden xs:inline">{t('profile_tabs.settings')}</span>
               </Link>
             ) : (
               <Link href="/login" className="bg-brand-50 dark:bg-brand-900/30 px-3 sm:px-4 py-2 rounded-full text-brand-600 dark:text-brand-400 font-medium text-sm hover:bg-brand-100 transition flex items-center gap-2">
                 <User className="w-4 h-4" />
-                Sign in
+                {t('common.message')}
               </Link>
             )}
           </div>

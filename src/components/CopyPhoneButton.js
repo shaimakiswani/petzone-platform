@@ -16,18 +16,22 @@ export default function CopyPhoneButton({ phone }) {
   return (
     <button 
       onClick={handleCopy}
-      className={`flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm transition w-full text-left border ${
-        copied ? "border-green-400 bg-green-50" : "border-brand-100 hover:border-brand-300"
+      className={`flex items-center gap-3 bg-white p-3.5 rounded-2xl shadow-sm transition w-full text-left border ${
+        copied ? "border-green-400 bg-green-50" : "border-slate-100 hover:border-brand-300"
       }`}
     >
-      <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition ${
-        copied ? "bg-green-500 text-white" : "bg-green-100 text-green-600"
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition ${
+        copied ? "bg-green-500 text-white shadow-md shadow-green-500/20" : "bg-green-50 text-green-600"
       }`}>
-        {copied ? <Check size={24} /> : <Phone size={24} />}
+        {copied ? <Check size={20} /> : <Phone size={20} />}
       </div>
-      <div>
-        <p className="text-sm text-gray-500">{copied ? "Copied to clipboard!" : "Phone Number (Click to Copy)"}</p>
-        <p className="text-lg font-bold text-gray-900">{phone || "Not Provided"}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-0.5 leading-none">
+          {copied ? "Copied!" : "Phone Number (Click to Copy)"}
+        </p>
+        <p className="text-sm sm:text-base font-black text-slate-900 leading-tight">
+          {phone || "Not Provided"}
+        </p>
       </div>
     </button>
   );

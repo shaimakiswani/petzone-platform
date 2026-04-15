@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PawPrint, Mail, Lock, User } from "lucide-react";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, query, collection, where, getDocs } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
 export default function RegisterPage() {
@@ -22,12 +22,27 @@ export default function RegisterPage() {
     try {
       setError("");
       setLoading(true);
+
+      // Unique Name Check (Case-insensitive)
+      const usersRef = collection(db, "users");
+      const normalizedName = name.trim().toLowerCase();
+      
+      const q = query(usersRef, where("name_lowercase", "==", normalizedName));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        setError("This name is already taken. Please choose another Full Name.");
+        setLoading(false);
+        return;
+      }
+
       const userCredential = await register(email, password);
       
       // Initialize basic user profile in Firestore
       await setDoc(doc(db, "users", userCredential.user.uid), {
         uid: userCredential.user.uid,
-        name: name,
+        name: name.trim(),
+        name_lowercase: normalizedName,
         email: email,
         role: "user",
         createdAt: new Date().toISOString()

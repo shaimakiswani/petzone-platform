@@ -1,14 +1,15 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { collection, getDocs, query } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import PetCard from "@/components/PetCard";
 import Link from "next/link";
 import { Search, Loader2 } from "lucide-react";
+import ListingCard from "@/components/ListingCard";
 
-export default function GlobalSearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") || "";
   
@@ -103,44 +104,14 @@ export default function GlobalSearchPage() {
 
   const totalResults = results.pets.length + results.clinics.length + results.hostels.length + results.supplies.length;
 
-  const SearchCard = ({ item }) => (
-    <Link 
-      href={`/${item.type}/${item.id}`} 
-      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col h-full group"
-    >
-      <div className="h-40 bg-gray-50 flex items-center justify-center relative">
-        {item.image ? (
-          <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-        ) : (
-          <span className="text-4xl opacity-50">
-            {item.type === 'pets' ? '🐾' : item.type === 'clinics' ? '🏥' : item.type === 'hostels' ? '🏡' : '🛍️'}
-          </span>
-        )}
-        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-bold text-gray-500 shadow-sm uppercase tracking-tighter">
-          {item.type}
-        </div>
-      </div>
-      <div className="p-4 flex flex-col flex-1">
-        <h3 className="font-bold text-gray-900 group-hover:text-brand-500 transition line-clamp-1">{item.name}</h3>
-        {item.price !== undefined && (
-          <p className="text-brand-500 font-black text-lg">
-            ${item.price}{item.type === 'hostels' ? '/night' : ''}
-          </p>
-        )}
-        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-          📍 {item.location || 'PetZone Platform'}
-        </p>
-        <p className="text-[11px] text-gray-500 line-clamp-2 mt-3 flex-1">{item.description}</p>
-      </div>
-    </Link>
-  );
+
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="mb-10 text-center">
         <h1 className="text-4xl font-black text-gray-900 mb-2">Platform Search</h1>
         {q ? (
-          <p className="text-gray-500 font-medium">Found {totalResults} matches for "{q}"</p>
+          <p className="text-gray-500 font-medium">Found {totalResults} matches for &quot;{q}&quot;</p>
         ) : (
           <p className="text-gray-500">Discover everything for your pet</p>
         )}
@@ -156,20 +127,28 @@ export default function GlobalSearchPage() {
           {totalResults === 0 && q && (
             <div className="text-center py-24 bg-white rounded-[40px] border border-gray-100 shadow-sm">
               <span className="text-7xl block mb-6 animate-bounce">🕵️‍♂️</span>
-              <p className="text-gray-500 text-xl font-medium">We couldn't find anything matching your search.</p>
-              <p className="text-gray-400 text-sm mt-1">Try searching for "Amman", "Cat", or "Vaccination".</p>
+              <p className="text-gray-500 text-xl font-medium">We couldn&apos;t find anything matching your search.</p>
+              <p className="text-gray-400 text-sm mt-1">Try searching for &quot;Amman&quot;, &quot;Cat&quot;, or &quot;Vaccination&quot;.</p>
             </div>
           )}
 
           {/* Results Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {results.pets.map(item => <SearchCard key={item.id} item={item} />)}
-            {results.supplies.map(item => <SearchCard key={item.id} item={item} />)}
-            {results.clinics.map(item => <SearchCard key={item.id} item={item} />)}
-            {results.hostels.map(item => <SearchCard key={item.id} item={item} />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {results.pets.map(item => <ListingCard key={item.id} item={item} type="pets" />)}
+            {results.supplies.map(item => <ListingCard key={item.id} item={item} type="supplies" />)}
+            {results.clinics.map(item => <ListingCard key={item.id} item={item} type="clinics" />)}
+            {results.hostels.map(item => <ListingCard key={item.id} item={item} type="hostels" />)}
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+export default function GlobalSearchPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="animate-spin text-brand-500" /></div>}>
+      <SearchContent />
+    </Suspense>
   );
 }

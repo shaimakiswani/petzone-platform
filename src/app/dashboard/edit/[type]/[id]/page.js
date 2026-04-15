@@ -7,6 +7,7 @@ import { db } from "@/firebase/config";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { compressImage } from "@/utils/imageCompressor";
+import { PET_DATA, SUPPLY_DATA } from "@/constants/petData";
 
 export default function EditAdPage({ params }) {
   const unwrappedParams = use(params);
@@ -48,6 +49,24 @@ export default function EditAdPage({ params }) {
     }
   };
 
+  const handleFieldChange = (name, value) => {
+    if (name === "type" && type === "pets") {
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: value,
+        breed: PET_DATA[value]?.breeds[0] || "Other"
+      }));
+    } else if (name === "category" && type === "supplies") {
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: value,
+        subCategory: SUPPLY_DATA[value]?.items[0] || "Other"
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -76,20 +95,51 @@ export default function EditAdPage({ params }) {
         <ArrowLeft className="mr-2 w-4 h-4" /> Back
       </button>
 
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Listing</h1>
         <p className="text-gray-500 mb-8 uppercase text-xs font-bold tracking-widest">{type.slice(0, -1)} Details</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name / Title</label>
-            <input 
-              required 
-              type="text" 
-              value={formData.name || ""} 
-              onChange={e => setFormData({...formData, name: e.target.value})} 
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" 
-            />
+          <div className={`${type === 'supplies' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : ''}`}>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name / Title</label>
+                <input 
+                  required 
+                  type="text" 
+                  value={formData.name || ""} 
+                  onChange={e => handleFieldChange('name', e.target.value)} 
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" 
+                />
+            </div>
+            {type === 'supplies' && (
+                <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Item Condition</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleFieldChange("condition", "New")}
+                        className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all font-bold text-sm ${
+                          formData.condition === 'New' 
+                            ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm' 
+                            : 'bg-white border-gray-100 text-gray-400 hover:border-brand-200'
+                        }`}
+                      >
+                        ✨ New (جديد)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleFieldChange("condition", "Used")}
+                        className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all font-bold text-sm ${
+                          formData.condition === 'Used' 
+                            ? 'bg-orange-50 border-orange-500 text-orange-700 shadow-sm' 
+                            : 'bg-white border-gray-100 text-gray-400 hover:border-brand-200'
+                        }`}
+                      >
+                        ♻️ Used (مستعمل)
+                      </button>
+                    </div>
+                </div>
+            )}
           </div>
 
           {type === "pets" && (
@@ -97,29 +147,25 @@ export default function EditAdPage({ params }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Animal Type</label>
                 <select 
-                  value={formData.type || "Cat"} 
-                  onChange={e => setFormData({...formData, type: e.target.value})}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none"
+                  value={formData.type || "Dog"} 
+                  onChange={e => handleFieldChange("type", e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none font-bold text-brand-600"
                 >
-                  <option value="Cat">Cat</option>
-                  <option value="Dog">Dog</option>
-                  <option value="Bird">Bird</option>
-                  <option value="Other">Other</option>
+                  {Object.keys(PET_DATA).map(key => (
+                    <option key={key} value={key}>{PET_DATA[key].label}</option>
+                  ))}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Breed</label>
                 <select 
-                  value={formData.breed || "Mixed"} 
-                  onChange={e => setFormData({...formData, breed: e.target.value})}
+                  value={formData.breed || ""} 
+                  onChange={e => handleFieldChange("breed", e.target.value)}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none"
                 >
-                  <option value="Persian">Persian</option>
-                  <option value="Siamese">Siamese</option>
-                  <option value="Golden Retriever">Golden Retriever</option>
-                  <option value="Husky">Husky</option>
-                  <option value="Mixed">Mixed</option>
-                  <option value="Other">Other</option>
+                   {PET_DATA[formData.type || "Dog"]?.breeds.map(breed => (
+                    <option key={breed} value={breed}>{breed}</option>
+                  ))}
                 </select>
               </div>
               <div>

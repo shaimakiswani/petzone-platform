@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import PetCard from "@/components/PetCard";
+import ListingCard from "@/components/ListingCard";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function FavoritesPage() {
   const { favorites, loading: favLoading } = useFavorites();
   const { user, loading: authLoading } = useAuth();
+  const { t, isAr } = useLanguage();
   const router = useRouter();
 
-  const [pets, setPets] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,18 +24,29 @@ export default function FavoritesPage() {
       return;
     }
 
-    async function fetchFavoritedPets() {
+    async function fetchFavoritedItems() {
       if (favorites.length === 0) {
-        setPets([]);
+        setItems([]);
         setLoading(false);
         return;
       }
       try {
-        const snapshot = await getDocs(collection(db, "pets"));
-        // Filter locally since Firestore IN limits to 10 and we don't have a complex query setup
-        const allPets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const favPets = allPets.filter(pet => favorites.includes(pet.id));
-        setPets(favPets);
+        const [petsSnap, suppliesSnap, clinicsSnap, hostelsSnap] = await Promise.all([
+          getDocs(collection(db, "pets")),
+          getDocs(collection(db, "supplies")),
+          getDocs(collection(db, "clinics")),
+          getDocs(collection(db, "hostels"))
+        ]);
+
+        const allItems = [
+          ...petsSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), listingType: 'pets' })),
+          ...suppliesSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), listingType: 'supplies' })),
+          ...clinicsSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), listingType: 'clinics' })),
+          ...hostelsSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), listingType: 'hostels' }))
+        ];
+
+        const favItems = allItems.filter(item => favorites.includes(item.id));
+        setItems(favItems);
       } catch (error) {
         console.error("Error fetching favorites:", error);
       } finally {
@@ -42,34 +55,37 @@ export default function FavoritesPage() {
     }
     
     if (!favLoading && user) {
-      fetchFavoritedPets();
+      fetchFavoritedItems();
     }
   }, [favorites, favLoading, user, authLoading, router]);
 
   if (authLoading || favLoading || loading) {
-    return <div className="text-center py-20 text-gray-500">Loading your favorites...</div>;
+    return <div className="text-center py-20 text-gray-500">{t('favorites.loading')}</div>;
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Favorites ({pets.length})</h1>
-        <p className="text-gray-500">Pets you've loved and saved for later.</p>
+    <div className={`max-w-7xl mx-auto px-4 py-8 ${isAr ? 'rtl' : 'ltr'}`}>
+      <div className="mb-12">
+        <h1 className="text-4xl font-black text-gray-900 mb-2">{t('favorites.title')} ({items.length})</h1>
+        <p className="text-gray-500">{t('favorites.desc')}</p>
       </div>
 
-      {pets.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-3xl border border-gray-100">
-          <span className="text-4xl block mb-4">❤️</span>
-          <h2 className="text-xl font-bold text-gray-700 mb-2">No favorites yet</h2>
-          <p className="text-gray-500 mb-4">You haven't added any pets to your favorites list.</p>
-          <button onClick={() => router.push('/pets')} className="text-brand-500 font-bold hover:underline">
-            Explore Pets
+      {items.length === 0 ? (
+        <div className="text-center py-24 bg-white rounded-[40px] border border-gray-100 shadow-sm">
+          <span className="text-7xl block mb-6 animate-pulse">❤️</span>
+          <h2 className="text-2xl font-bold text-gray-700 mb-2">{t('favorites.empty')}</h2>
+          <p className="text-gray-500 mb-8 max-w-sm mx-auto">{t('favorites.empty_desc')}</p>
+          <button 
+            onClick={() => router.push('/pets')} 
+            className="bg-brand-500 text-white font-black px-8 py-3 rounded-2xl hover:bg-brand-600 transition shadow-lg shadow-brand-500/20"
+          >
+            {t('favorites.btn_explore')}
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {pets.map(pet => (
-            <PetCard key={pet.id} pet={pet} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {items.map(item => (
+            <ListingCard key={item.id} item={item} type={item.listingType || "pets"} />
           ))}
         </div>
       )}
