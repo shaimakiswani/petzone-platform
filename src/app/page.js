@@ -1,3 +1,7 @@
+"use client";
+
+import Link from "next/link";
+import { ArrowRight, Search, Heart, Shield } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function Home() {
