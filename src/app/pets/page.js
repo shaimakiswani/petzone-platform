@@ -5,8 +5,9 @@ import ListingCard from "@/components/ListingCard";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/firebase/config";
+import { PET_DATA } from "@/constants/petData";
 
-const CATEGORIES = ["All", "Dog", "Cat", "Bird", "Other"];
+const CATEGORIES = ["All", ...Object.keys(PET_DATA)];
 
 export default function PetsPage() {
   const [pets, setPets] = useState([]);

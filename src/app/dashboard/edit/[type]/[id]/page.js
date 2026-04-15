@@ -7,6 +7,7 @@ import { db } from "@/firebase/config";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { compressImage } from "@/utils/imageCompressor";
+import { PET_DATA } from "@/constants/petData";
 
 export default function EditAdPage({ params }) {
   const unwrappedParams = use(params);
@@ -45,6 +46,18 @@ export default function EditAdPage({ params }) {
       setFormData(prev => ({...prev, image: compressedDataUrl}));
     } catch (err) {
       alert("Error processing image.");
+    }
+  };
+
+  const handleFieldChange = (name, value) => {
+    if (name === "type" && type === "pets") {
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: value,
+        breed: PET_DATA[value]?.breeds[0] || "Other"
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
@@ -87,7 +100,7 @@ export default function EditAdPage({ params }) {
               required 
               type="text" 
               value={formData.name || ""} 
-              onChange={e => setFormData({...formData, name: e.target.value})} 
+              onChange={e => handleFieldChange('name', e.target.value)} 
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" 
             />
           </div>
@@ -97,29 +110,25 @@ export default function EditAdPage({ params }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Animal Type</label>
                 <select 
-                  value={formData.type || "Cat"} 
-                  onChange={e => setFormData({...formData, type: e.target.value})}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none"
+                  value={formData.type || "Dog"} 
+                  onChange={e => handleFieldChange("type", e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none font-bold text-brand-600"
                 >
-                  <option value="Cat">Cat</option>
-                  <option value="Dog">Dog</option>
-                  <option value="Bird">Bird</option>
-                  <option value="Other">Other</option>
+                  {Object.keys(PET_DATA).map(key => (
+                    <option key={key} value={key}>{PET_DATA[key].label}</option>
+                  ))}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Breed</label>
                 <select 
-                  value={formData.breed || "Mixed"} 
-                  onChange={e => setFormData({...formData, breed: e.target.value})}
+                  value={formData.breed || ""} 
+                  onChange={e => handleFieldChange("breed", e.target.value)}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none"
                 >
-                  <option value="Persian">Persian</option>
-                  <option value="Siamese">Siamese</option>
-                  <option value="Golden Retriever">Golden Retriever</option>
-                  <option value="Husky">Husky</option>
-                  <option value="Mixed">Mixed</option>
-                  <option value="Other">Other</option>
+                   {PET_DATA[formData.type || "Dog"]?.breeds.map(breed => (
+                    <option key={breed} value={breed}>{breed}</option>
+                  ))}
                 </select>
               </div>
               <div>

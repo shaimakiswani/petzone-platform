@@ -6,6 +6,7 @@ import { db } from "@/firebase/config";
 import { collection, addDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { compressImage } from "@/utils/imageCompressor";
+import { PET_DATA } from "@/constants/petData";
 
 export default function AddPetPage() {
   const { user, loading } = useAuth();
@@ -13,8 +14,8 @@ export default function AddPetPage() {
 
   const [formData, setFormData] = useState({
     name: "",
-    type: "Cat",
-    breed: "Persian",
+    type: "Dog",
+    breed: "German Shepherd",
     age: "0-6 months",
     price: "",
     location: "",
@@ -101,34 +102,47 @@ export default function AddPetPage() {
   };
 
   const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    if (name === "type") {
+      // When type changes, we MUST reset breed to a valid one for that type
+      setFormData(prev => ({ 
+        ...prev, 
+        type: value, 
+        breed: PET_DATA[value]?.breeds[0] || "Other" 
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   if (loading || !user) return null;
 
   return (
     <div className="max-w-2xl mx-auto py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">List a Pet</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6 font-display">List a Pet</h1>
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-6">
         
         {/* Basic Info */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <div className="md:col-span-1">
+            <label className="block text-sm font-bold text-gray-700 mb-1">Name</label>
             <input required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder="Buddy" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Animal Type</label>
-            <select name="type" value={formData.type} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400">
-              <option value="Cat">Cat</option>
-              <option value="Dog">Dog</option>
-              <option value="Bird">Bird</option>
-              <option value="Other">Other</option>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Animal Type</label>
+            <select name="type" value={formData.type} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 font-bold text-brand-600">
+              {Object.keys(PET_DATA).map(key => (
+                <option key={key} value={key}>{PET_DATA[key].label}</option>
+              ))}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Breed</label>
-            <input required type="text" name="breed" value={formData.breed} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder="Breed..." />
+            <label className="block text-sm font-bold text-gray-700 mb-1">Breed</label>
+            <select name="breed" value={formData.breed} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400">
+              {PET_DATA[formData.type]?.breeds.map(breed => (
+                <option key={breed} value={breed}>{breed}</option>
+              ))}
+            </select>
           </div>
         </div>
 
