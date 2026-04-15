@@ -87,14 +87,17 @@ export default function ListingCard({ item, type = "pets" }) {
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         <button 
-          onClick={() => toggleFavorite(item.id)}
-          className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 shadow-lg ${
-            isFavorite 
-              ? "bg-brand-500 text-white" 
-              : "bg-white/80 text-gray-400 hover:bg-white hover:text-brand-500"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(item.id);
+          }}
+          className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 shadow-lg z-20 ${
+            favorited 
+              ? "bg-brand-500 text-white shadow-brand-500/40 scale-110" 
+              : "bg-white/90 text-gray-400 hover:bg-white hover:text-brand-500 hover:scale-110"
           }`}
         >
-          <Heart size={18} fill={isFavorite ? "currentColor" : "none"} />
+          <Heart size={18} fill={favorited ? "currentColor" : "none"} className="transition-transform" />
         </button>
         
         {/* Condition Badge for Supplies */}
