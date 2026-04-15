@@ -7,7 +7,7 @@ import { db } from "@/firebase/config";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { compressImage } from "@/utils/imageCompressor";
-import { PET_DATA } from "@/constants/petData";
+import { PET_DATA, SUPPLY_DATA } from "@/constants/petData";
 
 export default function EditAdPage({ params }) {
   const unwrappedParams = use(params);
@@ -56,6 +56,12 @@ export default function EditAdPage({ params }) {
         [name]: value,
         breed: PET_DATA[value]?.breeds[0] || "Other"
       }));
+    } else if (name === "category" && type === "supplies") {
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: value,
+        subCategory: SUPPLY_DATA[value]?.items[0] || "Other"
+      }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -89,20 +95,35 @@ export default function EditAdPage({ params }) {
         <ArrowLeft className="mr-2 w-4 h-4" /> Back
       </button>
 
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Listing</h1>
         <p className="text-gray-500 mb-8 uppercase text-xs font-bold tracking-widest">{type.slice(0, -1)} Details</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name / Title</label>
-            <input 
-              required 
-              type="text" 
-              value={formData.name || ""} 
-              onChange={e => handleFieldChange('name', e.target.value)} 
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" 
-            />
+          <div className={`${type === 'supplies' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : ''}`}>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name / Title</label>
+                <input 
+                  required 
+                  type="text" 
+                  value={formData.name || ""} 
+                  onChange={e => handleFieldChange('name', e.target.value)} 
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" 
+                />
+            </div>
+            {type === 'supplies' && (
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Condition</label>
+                    <select 
+                      value={formData.condition || "New"} 
+                      onChange={e => handleFieldChange("condition", e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none font-bold text-brand-600"
+                    >
+                      <option value="New">New (جديد)</option>
+                      <option value="Used">Used (مستعمل)</option>
+                    </select>
+                </div>
+            )}
           </div>
 
           {type === "pets" && (

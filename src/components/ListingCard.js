@@ -79,36 +79,42 @@ export default function ListingCard({ item, type = "pets" }) {
 
   return (
     <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition group relative flex flex-col h-full">
-      {/* Image Section */}
-      <div className="h-52 w-full bg-gray-50 relative overflow-hidden shrink-0">
-        {item.image ? (
-          <img 
-            src={item.image} 
-            alt={item.name} 
-            className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-brand-50">
-            <FallbackIcon />
-          </div>
-        )}
-        
-        {/* Favorite Button */}
+      {/* Image Container */}
+      <div className="relative aspect-square overflow-hidden group">
+        <img 
+          src={item.image || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=800"} 
+          alt={item.name} 
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        />
         <button 
           onClick={() => toggleFavorite(item.id)}
-          className={`absolute top-4 right-4 p-2.5 rounded-full transition backdrop-blur-sm z-10 ${
-            favorited ? "bg-brand-500 text-white shadow-lg shadow-brand-500/30" : "bg-white/90 text-gray-400 hover:text-brand-500 hover:bg-white"
+          className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 shadow-lg ${
+            isFavorite 
+              ? "bg-brand-500 text-white" 
+              : "bg-white/80 text-gray-400 hover:bg-white hover:text-brand-500"
           }`}
         >
-          <Heart size={20} fill={favorited ? "currentColor" : "none"} strokeWidth={2.5} />
+          <Heart size={18} fill={isFavorite ? "currentColor" : "none"} />
         </button>
-
-        {/* Dynamic Category Tag */}
-        {item.category && (
-          <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-brand-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm z-10">
-            {item.category}
-          </span>
+        
+        {/* Condition Badge for Supplies */}
+        {type === "supplies" && item.condition && (
+          <div className={`absolute top-4 left-4 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider backdrop-blur-md shadow-sm border ${
+            item.condition === "New" 
+              ? "bg-green-500/90 text-white border-green-400" 
+              : "bg-amber-500/90 text-white border-amber-400"
+          }`}>
+            {item.condition}
+          </div>
         )}
+
+        <div className="absolute bottom-4 left-4">
+          <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-sm border border-white/20">
+            <p className="text-brand-600 font-black text-sm">
+              {item.price === 0 || item.price === "0" ? "Free" : `$${item.price}`}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Content Section */}
@@ -116,8 +122,6 @@ export default function ListingCard({ item, type = "pets" }) {
         {/* Header: Title & Price */}
         <div className="flex justify-between items-start mb-3 gap-2">
           <h3 className="text-xl font-extrabold text-gray-900 leading-tight truncate">{item.name}</h3>
-          <div className="shrink-0 flex flex-col items-end">
-             <span className="text-brand-600 font-extrabold bg-brand-50 px-3 py-1.5 rounded-xl text-sm shadow-sm border border-brand-100/50">
                 {item.price === 0 || !item.price ? "Free" : `$${item.price}`}
              </span>
              {type === 'hostels' && <span className="text-[10px] text-gray-400 font-bold mt-1">per night</span>}

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { db } from "@/firebase/config";
 import { collection, addDoc } from "firebase/firestore";
 import { compressImage } from "@/utils/imageCompressor";
+import { SUPPLY_DATA } from "@/constants/petData";
 
 import { X as CloseIcon } from "lucide-react";
 
@@ -14,7 +15,9 @@ export default function AddSupplyPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({ 
     name: "", 
-    category: "Food", 
+    category: "Housing & Carriers", 
+    subCategory: "Dog House",
+    condition: "New",
     price: "", 
     phone: "", 
     image: "", 
@@ -24,7 +27,7 @@ export default function AddSupplyPage() {
   const [features, setFeatures] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
-  const FEATURE_OPTIONS = ["New Condition", "Used", "Warranty", "Quick Delivery", "Original Packaging"];
+  const FEATURE_OPTIONS = ["Warranty", "Quick Delivery", "Original Packaging", "Safe for Pets", "High Quality"];
 
   const toggleFeature = (feature) => {
     setFeatures(prev => prev.includes(feature) ? prev.filter(f => f !== feature) : [...prev, feature]);
@@ -56,6 +59,19 @@ export default function AddSupplyPage() {
     setFormData(prev => ({...prev, gallery: prev.gallery.filter((_, i) => i !== index)}));
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "category") {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        subCategory: SUPPLY_DATA[value]?.items[0] || "Other"
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
@@ -77,25 +93,49 @@ export default function AddSupplyPage() {
 
   return (
     <div className="max-w-2xl mx-auto py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Sell Supplies</h1>
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-6">
-        <div>
-          <label className="block text-sm font-medium mb-1">Item Name</label>
-          <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl" />
+      <h1 className="text-3xl font-bold text-gray-900 mb-6 font-display text-center">Sell Supplies</h1>
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="md:col-span-1">
+            <label className="block text-sm font-bold text-gray-700 mb-1">Item Title</label>
+            <input required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" placeholder="e.g. Ergonomic Dog House" />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Condition</label>
+            <select name="condition" value={formData.condition} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none font-bold text-brand-600">
+              <option value="New">New (جديد)</option>
+              <option value="Used">Used (مستعمل)</option>
+            </select>
+          </div>
         </div>
+
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium mb-1">Category</label>
-            <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl">
-              <option value="Food">Food</option>
-              <option value="Toys">Toys</option>
-              <option value="Accessories">Accessories</option>
-              <option value="Medical">Medical</option>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Category</label>
+            <select name="category" value={formData.category} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none">
+              {Object.keys(SUPPLY_DATA).map(key => (
+                <option key={key} value={key}>{SUPPLY_DATA[key].label}</option>
+              ))}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Price ($)</label>
-            <input required type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl" />
+            <label className="block text-sm font-bold text-gray-700 mb-1">Specific Item</label>
+            <select name="subCategory" value={formData.subCategory} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none">
+              {SUPPLY_DATA[formData.category]?.items.map(item => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Price ($)</label>
+            <input required type="number" name="price" value={formData.price} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" placeholder="0.00" />
+          </div>
+          <div className="hidden">
+            {/* Kept for structure similarity if needed */}
           </div>
         </div>
         <div>

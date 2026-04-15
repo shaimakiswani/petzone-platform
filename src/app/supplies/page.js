@@ -7,8 +7,9 @@ import { db } from "@/firebase/config";
 import Link from "next/link";
 import { useFavorites } from "@/context/FavoritesContext";
 import ListingCard from "@/components/ListingCard";
+import { SUPPLY_DATA } from "@/constants/petData";
 
-const CATEGORIES = ["All", "Food", "Toys", "Accessories", "Medical"];
+const CATEGORIES = ["All", ...Object.keys(SUPPLY_DATA)];
 
 export default function SuppliesPage() {
   const [supplies, setSupplies] = useState([]);
