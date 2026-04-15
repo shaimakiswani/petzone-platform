@@ -197,6 +197,21 @@ export default function ChatSystem() {
     }
   };
 
+  const handleDeleteChat = async (e, id) => {
+    e.stopPropagation();
+    if (!confirm("Delete this entire conversation? This cannot be undone.")) return;
+    
+    try {
+      if (activeChat?.id === id) {
+        handleCloseChat();
+      }
+      await deleteDoc(doc(db, "chats", id));
+    } catch (err) {
+      console.error("Delete Chat Error:", err);
+      alert("Failed to delete conversation.");
+    }
+  };
+
   const getOtherParticipantName = (chat) => {
     if (!user || !chat.participants) return "User";
     const otherId = chat.participants.find(p => p !== user.uid);
@@ -215,29 +230,37 @@ export default function ChatSystem() {
             <div className="p-8 text-center text-sm text-gray-400 italic">No messages yet</div>
           ) : (
             chats.map(chat => (
-              <button 
-                key={chat.id} 
-                onClick={() => handleSelectChat(chat)}
-                className={`w-full p-4 flex items-start gap-3 hover:bg-gray-50 transition text-left border-b border-gray-50 ${activeChat?.id === chat.id ? 'bg-brand-50 border-brand-100' : ''}`}
-              >
-                <div className="relative shrink-0">
-                  <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-600">
-                    <User size={20} />
+              <div key={chat.id} className="group relative">
+                <button 
+                  onClick={() => handleSelectChat(chat)}
+                  className={`w-full p-4 flex items-start gap-3 hover:bg-gray-50 transition text-left border-b border-gray-50 ${activeChat?.id === chat.id ? 'bg-brand-50 border-brand-100' : ''}`}
+                >
+                  <div className="relative shrink-0">
+                    <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-600">
+                      <User size={20} />
+                    </div>
+                    {chat.unreadBy?.includes(user.uid) && (
+                      <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white" />
+                    )}
                   </div>
-                  {chat.unreadBy?.includes(user.uid) && (
-                    <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white" />
-                  )}
-                </div>
-                <div className="flex-1 overflow-hidden">
-                  <div className="font-bold text-gray-900 truncate flex justify-between items-center gap-2">
-                    <span>{getOtherParticipantName(chat)}</span>
-                    {chat.unreadBy?.includes(user.uid) && <span className="text-[10px] bg-brand-500 text-white px-1.5 rounded-full">New</span>}
+                  <div className="flex-1 overflow-hidden pr-6">
+                    <div className="font-bold text-gray-900 truncate flex justify-between items-center gap-2">
+                      <span>{getOtherParticipantName(chat)}</span>
+                      {chat.unreadBy?.includes(user.uid) && <span className="text-[10px] bg-brand-500 text-white px-1.5 rounded-full">New</span>}
+                    </div>
+                    <div className={`text-xs truncate ${chat.unreadBy?.includes(user.uid) ? 'text-brand-600 font-bold' : 'text-gray-500'}`}>
+                      {chat.lastMessage || "Start a conversation"}
+                    </div>
                   </div>
-                  <div className={`text-xs truncate ${chat.unreadBy?.includes(user.uid) ? 'text-brand-600 font-bold' : 'text-gray-500'}`}>
-                    {chat.lastMessage || "Start a conversation"}
-                  </div>
-                </div>
-              </button>
+                </button>
+                <button
+                  onClick={(e) => handleDeleteChat(e, chat.id)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 sm:opacity-100"
+                  title="Delete Conversation"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             ))
           )}
         </div>
