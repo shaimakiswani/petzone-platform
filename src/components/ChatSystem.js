@@ -12,6 +12,7 @@ import {
   serverTimestamp,
   doc,
   getDoc,
+  getDocs,
   updateDoc,
   deleteDoc,
   arrayUnion,
@@ -191,8 +192,24 @@ export default function ChatSystem() {
   const handleDeleteMessage = async (msgId) => {
     if (!confirm("Remove this message for everyone?")) return;
     try {
+      // 1. Delete the message
       await deleteDoc(doc(db, "chats", activeChat.id, "messages", msgId));
+
+      // 2. Re-sync the lastMessage on the parent chat object
+      const mRef = collection(db, "chats", activeChat.id, "messages");
+      const q = query(mRef, orderBy("createdAt", "desc"), limit(1));
+      const querySnapshot = await getDocs(q);
+
+      let newLastMsg = "Start a conversation";
+      if (!querySnapshot.empty) {
+        newLastMsg = querySnapshot.docs[0].data().text || "Sent a message";
+      }
+
+      await updateDoc(doc(db, "chats", activeChat.id), {
+        lastMessage: newLastMsg
+      });
     } catch (err) {
+      console.error("Error deleting message:", err);
       alert("Error deleting message");
     }
   };
