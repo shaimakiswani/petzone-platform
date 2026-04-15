@@ -99,18 +99,18 @@ export default function ListingCard({ item, type = "pets" }) {
         
         {/* Condition Badge for Supplies */}
         {type === "supplies" && item.condition && (
-          <div className={`absolute top-4 left-4 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider backdrop-blur-md shadow-sm border ${
+          <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-2xl text-[9px] font-black uppercase tracking-tighter backdrop-blur-md shadow-lg border flex items-center gap-1.5 z-10 ${
             item.condition === "New" 
-              ? "bg-green-500/90 text-white border-green-400" 
-              : "bg-amber-500/90 text-white border-amber-400"
+              ? "bg-emerald-500/90 text-white border-emerald-400" 
+              : "bg-orange-500/90 text-white border-orange-400"
           }`}>
-            {item.condition}
+            {item.condition === "New" ? "✨ Brand New" : "♻️ Pre-owned"}
           </div>
         )}
 
-        <div className="absolute bottom-4 left-4">
-          <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-sm border border-white/20">
-            <p className="text-brand-600 font-black text-sm">
+        <div className="absolute bottom-4 left-4 z-10">
+          <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-white/40 ring-1 ring-black/5">
+            <p className="text-brand-600 font-black text-sm md:text-base">
               {item.price === 0 || item.price === "0" ? "Free" : `$${item.price}`}
             </p>
           </div>
@@ -119,13 +119,9 @@ export default function ListingCard({ item, type = "pets" }) {
 
       {/* Content Section */}
       <div className="p-6 flex flex-col flex-1">
-        {/* Header: Title & Price */}
+        {/* Header: Title */}
         <div className="flex justify-between items-start mb-3 gap-2">
           <h3 className="text-xl font-extrabold text-gray-900 leading-tight truncate">{item.name}</h3>
-                {item.price === 0 || !item.price ? "Free" : `$${item.price}`}
-             </span>
-             {type === 'hostels' && <span className="text-[10px] text-gray-400 font-bold mt-1">per night</span>}
-          </div>
         </div>
 
         {/* Dynamic Stickers area */}

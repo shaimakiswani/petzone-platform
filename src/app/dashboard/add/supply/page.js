@@ -102,11 +102,31 @@ export default function AddSupplyPage() {
             <input required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" placeholder="e.g. Ergonomic Dog House" />
           </div>
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">Condition</label>
-            <select name="condition" value={formData.condition} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none font-bold text-brand-600">
-              <option value="New">New (جديد)</option>
-              <option value="Used">Used (مستعمل)</option>
-            </select>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Item Condition</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData({...formData, condition: 'New'})}
+                className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all font-bold text-sm ${
+                  formData.condition === 'New' 
+                    ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm' 
+                    : 'bg-white border-gray-100 text-gray-400 hover:border-brand-200'
+                }`}
+              >
+                ✨ New (جديد)
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({...formData, condition: 'Used'})}
+                className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all font-bold text-sm ${
+                  formData.condition === 'Used' 
+                    ? 'bg-orange-50 border-orange-500 text-orange-700 shadow-sm' 
+                    : 'bg-white border-gray-100 text-gray-400 hover:border-brand-200'
+                }`}
+              >
+                ♻️ Used (مستعمل)
+              </button>
+            </div>
           </div>
         </div>
 
