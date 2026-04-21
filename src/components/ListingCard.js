@@ -121,23 +121,38 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
           alt={item.name} 
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleFavorite(item.id);
-          }}
-          className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 shadow-lg z-20 ${
-            favorited 
-              ? "bg-brand-500 text-white shadow-brand-500/40 scale-110" 
-              : "bg-white/90 text-gray-400 hover:bg-white hover:text-brand-500 hover:scale-110"
-          }`}
-        >
-          <Heart size={18} fill={favorited ? "currentColor" : "none"} className="transition-transform" />
-        </button>
+        <div className={`absolute top-4 ${isAr ? 'left-4' : 'right-4'} flex flex-col gap-2 z-20`}>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              toggleFavorite(item.id);
+            }}
+            className={`p-2.5 rounded-full backdrop-blur-md transition-all duration-300 shadow-lg ${
+              favorited 
+                ? "bg-brand-500 text-white shadow-brand-500/40 scale-110" 
+                : "bg-white/90 text-gray-400 hover:bg-white hover:text-brand-500 hover:scale-110"
+            }`}
+          >
+            <Heart size={18} fill={favorited ? "currentColor" : "none"} className="transition-transform" />
+          </button>
+
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setShowReportModal(true);
+            }}
+            title={t('common.report') || "Report Listing"}
+            className="p-2.5 rounded-full bg-white/90 backdrop-blur-md text-gray-400 hover:text-amber-500 shadow-lg transition-all hover:scale-110"
+          >
+            <AlertTriangle size={18} />
+          </button>
+        </div>
         
         {/* Condition Badge for Supplies */}
         {type === "supplies" && item.condition && (
-          <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-2xl text-[9px] font-black uppercase tracking-tighter backdrop-blur-md shadow-lg border flex items-center gap-1.5 z-10 ${
+          <div className={`absolute top-4 ${isAr ? 'right-4' : 'left-4'} px-3 py-1.5 rounded-2xl text-[9px] font-black uppercase tracking-tighter backdrop-blur-md shadow-lg border flex items-center gap-1.5 z-10 ${
             item.condition === "New" 
               ? "bg-emerald-500/90 text-white border-emerald-400" 
               : "bg-orange-500/90 text-white border-orange-400"
@@ -148,32 +163,13 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
 
         {/* Price Badge - Only show if price is defined and not clinics usually */}
         {item.price !== undefined && type !== 'clinics' && (
-          <>
-            {/* Favoriting and Reporting */}
-            <div className={`absolute top-4 ${isAr ? 'left-4' : 'right-4'} flex flex-col gap-2 z-10`}>
-              <button 
-                onClick={(e) => { e.preventDefault(); toggleFavorite(item.id); }}
-                className={`p-2 rounded-xl backdrop-blur-md transition-all active:scale-95 ${favorited ? 'bg-red-500 text-white shadow-lg' : 'bg-white/90 text-gray-400 hover:text-red-500 shadow-sm'}`}
-              >
-                <Heart className={`w-5 h-5 ${favorited ? 'fill-current' : ''}`} />
-              </button>
-              
-              <button 
-                onClick={(e) => { e.preventDefault(); setShowReportModal(true); }}
-                title="Report Listing"
-                className="p-2 rounded-xl bg-white/90 backdrop-blur-md text-gray-400 hover:text-amber-500 shadow-sm transition-all active:scale-95"
-              >
-                <AlertTriangle className="w-5 h-5" />
-              </button>
+          <div className={`absolute bottom-4 ${isAr ? 'left-4' : 'right-4'} z-10`}>
+            <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-white/40 ring-1 ring-black/5">
+              <p className="text-brand-600 font-black text-sm md:text-base">
+                {item.price === 0 || item.price === "0" ? t('common.free') : `$${item.price}`}
+              </p>
             </div>
-            <div className={`absolute bottom-4 ${isAr ? 'right-4' : 'left-4'} z-10`}>
-              <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-white/40 ring-1 ring-black/5">
-                <p className="text-brand-600 font-black text-sm md:text-base">
-                  {item.price === 0 || item.price === "0" ? t('common.free') : `$${item.price}`}
-                </p>
-              </div>
-            </div>
-          </>
+          </div>
         )}
       </div>
 
