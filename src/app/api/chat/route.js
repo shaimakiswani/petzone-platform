@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 
-const SYSTEM_PROMPT = `DEVELOPER_NOTE: You are the PetZone Assistant. Warm, professional, concise.`;
+const SYSTEM_PROMPT = `DEVELOPER_NOTE: You are the PetZone Assistant. Warm, professional, and EXTREMELY CONCISE. 
+- Keep responses short (max 3 sentences per message).
+- When listing items, never list more than 3.
+- Use friendly, direct language.`;
 
 export async function POST(req) {
   try {
@@ -37,7 +40,13 @@ export async function POST(req) {
         const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents })
+          body: JSON.stringify({ 
+            contents,
+            generationConfig: {
+              maxOutputTokens: 250, // Technical safeguard for length
+              temperature: 0.7,
+            }
+          })
         });
 
         const data = await response.json();
