@@ -15,16 +15,15 @@ export async function POST(req) {
       return NextResponse.json({ role: 'assistant', content: "يرجى ضبط مفتاح API أولاً." });
     }
 
-    // Standard Gemini models
+    // Stable and confirmed Gemini models
     const modelsToTry = [
-      "gemini-2.0-flash",
       "gemini-1.5-flash",
       "gemini-1.5-pro"
     ];
 
     const contents = messages.map(msg => ({
       role: msg.isBot ? "model" : "user",
-      parts: [{ text: msg.text }]
+      parts: [{ text: msg.text || "" }]
     }));
     if (contents.length > 0 && contents[0].role === "model") contents.shift();
 
@@ -35,14 +34,14 @@ export async function POST(req) {
 
     for (const modelId of modelsToTry) {
       try {
-        const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${finalKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${finalKey}`;
         const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             contents,
             generationConfig: {
-              maxOutputTokens: 512, // Increased for Arabic completeness
+              maxOutputTokens: 800, 
               temperature: 0.7,
             }
           })
@@ -51,17 +50,19 @@ export async function POST(req) {
         const data = await response.json();
 
         if (response.ok) {
-          const botText = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't process that.";
-          return NextResponse.json({ role: 'assistant', content: botText });
+          const botText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (botText) {
+            return NextResponse.json({ role: 'assistant', content: botText });
+          }
         }
       } catch (err) {
-        console.warn(`Fallback: ${modelId} failed, trying next...`);
+        console.warn(`Fallback: ${modelId} failed`);
       }
     }
 
     return NextResponse.json({ 
       role: 'assistant', 
-      content: "عذراً، نظام المساعد الذكي يواجه تقلبات فنية حالياً. يرجى المحاولة بعد قليل." 
+      content: "عذراً، واجهت مشكلة في الاتصال بالسيرفر. يرجى المحاولة مرة أخرى." 
     });
 
   } catch (error) {
