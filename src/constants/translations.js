@@ -5,7 +5,7 @@ export const translations = {
       pets: "Pets",
       supplies: "Supplies",
       clinics: "Clinics",
-      hostels: "Hostels",
+      hostels: "Hostels & Trainers",
       post_ad: "Post Ad"
     },
     nav_search: "Search pets, supplies...",
@@ -14,6 +14,7 @@ export const translations = {
     profile_tabs: {
       my_ads: "My Ads",
       messages: "Messages",
+      notifications: "Notifications",
       settings: "Settings",
       sign_out: "Sign Out"
     },
@@ -57,6 +58,18 @@ export const translations = {
       no_pets_desc: "Try adjusting your search criteria!",
       loading_pets: "Loading pets..."
     },
+    clinics_page: {
+      title: "Verified Vets & Clinics",
+      desc: "Find trusted healthcare professionals for your furry friends.",
+      placeholder: "Search clinics by name or city...",
+      no_results: "No clinics found"
+    },
+    hostels_page: {
+      title: "Pet Hostels & Sitters",
+      desc: "Safe, comfortable places for your pet while you are away.",
+      placeholder: "Search hostels by city...",
+      no_results: "No hostels found"
+    },
     
     // Home Page
     home: {
@@ -75,6 +88,8 @@ export const translations = {
     // Category Names
     categories: {
       all: "All",
+      hostel: "Hostel",
+      sitter: "Pet Trainer",
       dog: "Dog",
       cat: "Cat",
       bird: "Bird",
@@ -326,7 +341,7 @@ export const translations = {
       pets: "حيوانات",
       supplies: "مستلزمات",
       clinics: "عيادات",
-      hostels: "فنادق",
+      hostels: "فنادق ومدربو حيوانات",
       post_ad: "أضف إعلان"
     },
     nav_search: "ابحث عن حيوانات، مستلزمات...",
@@ -335,6 +350,7 @@ export const translations = {
     profile_tabs: {
       my_ads: "إعلاناتي",
       messages: "الرسائل",
+      notifications: "الإشعارات",
       settings: "الإعدادات",
       sign_out: "تسجيل الخروج"
     },
@@ -378,6 +394,18 @@ export const translations = {
       no_pets_desc: "حاول تغيير معايير البحث الخاصة بك!",
       loading_pets: "جاري تحميل الحيوانات..."
     },
+    clinics_page: {
+      title: "العيادات والبيطريين المعتمدين",
+      desc: "ابحث عن أفضل المتخصصين المعتمدين لصحة أليفك.",
+      placeholder: "ابحث عن عيادة بالاسم أو المدينة...",
+      no_results: "لم يتم العثور على عيادات"
+    },
+    hostels_page: {
+      title: "فنادق ومدربو الحيوانات",
+      desc: "أماكن آمنة ومدربون مختصون لأليفك.",
+      placeholder: "ابحث عن فندق أو مدرب بالاسم أو المدينة...",
+      no_results: "لم يتم العثور على نتائج"
+    },
     
     // Home Page
     home: {
@@ -396,6 +424,8 @@ export const translations = {
     // Category Names
     categories: {
       all: "الكل",
+      hostel: "فندق",
+      sitter: "مدرب حيوانات",
       dog: "كلاب",
       cat: "قطط",
       bird: "طيور",

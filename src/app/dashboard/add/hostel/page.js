@@ -16,6 +16,7 @@ export default function AddHostelPage() {
 
   const [formData, setFormData] = useState({ 
     name: "", 
+    category: "hostel",
     location: "", 
     price: "", 
     phone: "", 
@@ -27,14 +28,26 @@ export default function AddHostelPage() {
   const [features, setFeatures] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
-  const FEATURE_OPTIONS = useMemo(() => [
-    { id: "WiFi", label: t('forms.hostel.srvs.wifi') },
-    { id: "AC", label: t('forms.hostel.srvs.ac') },
-    { id: "24/7 Security", label: t('forms.hostel.srvs.security') },
-    { id: "Medical Support", label: t('forms.hostel.srvs.medical') },
-    { id: "Outdoor Area", label: t('forms.hostel.srvs.outdoor') },
-    { id: "Grooming", label: t('forms.hostel.srvs.grooming') },
-  ], [t]);
+  const FEATURE_OPTIONS = useMemo(() => {
+    if (formData.category === 'sitter') {
+      return [
+        { id: "Obedience", label: isAr ? 'تدريب طاعة' : 'Obedience Training' },
+        { id: "Potty", label: isAr ? 'تدريب حمام' : 'Potty Training' },
+        { id: "Behavioral", label: isAr ? 'تقويم سلوك' : 'Behavioral Therapy' },
+        { id: "Home Visits", label: isAr ? 'زيارات منزلية' : 'Home Visits' },
+        { id: "Walking", label: isAr ? 'تمشية' : 'Dog Walking' },
+        { id: "Boarding", label: isAr ? 'استضافة' : 'Boarding' },
+      ];
+    }
+    return [
+      { id: "WiFi", label: t('forms.hostel.srvs.wifi') },
+      { id: "AC", label: t('forms.hostel.srvs.ac') },
+      { id: "24/7 Security", label: t('forms.hostel.srvs.security') },
+      { id: "Medical Support", label: t('forms.hostel.srvs.medical') },
+      { id: "Outdoor Area", label: t('forms.hostel.srvs.outdoor') },
+      { id: "Grooming", label: t('forms.hostel.srvs.grooming') },
+    ];
+  }, [t, formData.category, isAr]);
 
   const toggleFeature = (featureId) => {
     setFeatures(prev => prev.includes(featureId) ? prev.filter(f => f !== featureId) : [...prev, featureId]);
@@ -89,24 +102,61 @@ export default function AddHostelPage() {
 
   return (
     <div className={`max-w-2xl mx-auto py-8 px-4 ${isAr ? 'rtl' : 'ltr'}`}>
-      <h1 className="text-3xl font-bold text-gray-900 mb-6 font-display text-center">{t('forms.hostel.title')}</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6 font-display text-center">
+        {formData.category === 'sitter' ? (isAr ? 'إضافة مدرب حيوانات' : 'List a Pet Trainer') : t('forms.hostel.title')}
+      </h1>
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-6">
-        <div>
-          <label className="block text-sm font-medium mb-1">{t('forms.hostel.name')}</label>
-          <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              {formData.category === 'sitter' ? (isAr ? 'اسم المدرب' : 'Trainer Name') : t('forms.hostel.name')}
+            </label>
+            <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">{isAr ? 'الفئة' : 'Category'}</label>
+            <div className={`grid grid-cols-2 gap-2`}>
+              <button
+                type="button"
+                onClick={() => { setFormData({...formData, category: 'hostel'}); setFeatures([]); }}
+                className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all font-bold text-sm ${
+                  formData.category === 'hostel' 
+                    ? 'bg-brand-50 border-brand-500 text-brand-700 shadow-sm' 
+                    : 'bg-white border-gray-100 text-gray-400 hover:border-brand-200'
+                }`}
+              >
+                🏠 {t('categories.hostel')}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setFormData({...formData, category: 'sitter'}); setFeatures([]); }}
+                className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all font-bold text-sm ${
+                  formData.category === 'sitter' 
+                    ? 'bg-purple-50 border-purple-500 text-purple-700 shadow-sm' 
+                    : 'bg-white border-gray-100 text-gray-400 hover:border-brand-200'
+                }`}
+              >
+                🦮 {t('categories.sitter')}
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium mb-1">{t('forms.hostel.location')}</label>
             <input required type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">{t('forms.hostel.price')}</label>
+            <label className="block text-sm font-medium mb-1">
+              {formData.category === 'sitter' ? (isAr ? 'سعر الجلسة ($)' : 'Price per Session ($)') : t('forms.hostel.price')}
+            </label>
             <input required type="number" min="0" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-3">{t('forms.hostel.features')}</label>
+          <label className="block text-sm font-bold text-gray-700 mb-3">
+             {formData.category === 'sitter' ? (isAr ? 'خدمات التدريب' : 'Training Services') : t('forms.hostel.features')}
+          </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {FEATURE_OPTIONS.map(feature => (
               <button
