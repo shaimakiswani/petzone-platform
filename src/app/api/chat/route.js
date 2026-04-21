@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 
-const SYSTEM_PROMPT = `DEVELOPER_NOTE: You are the PetZone Assistant. Warm, professional, and EXTREMELY CONCISE. 
+const SYSTEM_PROMPT = `DEVELOPER_NOTE: You are the PetZone Assistant. Warm, professional, brief and informative. 
 - ALWAYS respond in the SAME LANGUAGE the user is using (e.g., if they speak Arabic, you MUST respond in Arabic).
-- Keep responses short (max 3 sentences per message).
-- When listing items, never list more than 3.
+- Keep responses concise but COMPLETE. Do not cut off mid-sentence.
 - Use friendly, direct language.`;
 
 export async function POST(req) {
@@ -16,12 +15,11 @@ export async function POST(req) {
       return NextResponse.json({ role: 'assistant', content: "يرجى ضبط مفتاح API أولاً." });
     }
 
-    // User-requested models in priority order
+    // Standard Gemini models
     const modelsToTry = [
-      "gemini-2.5-flash",
       "gemini-2.0-flash",
-      "gemini-2.5-flash-lite",
-      "gemini-1.5-flash" // Safety fallback
+      "gemini-1.5-flash",
+      "gemini-1.5-pro"
     ];
 
     const contents = messages.map(msg => ({
@@ -44,7 +42,7 @@ export async function POST(req) {
           body: JSON.stringify({ 
             contents,
             generationConfig: {
-              maxOutputTokens: 250, // Technical safeguard for length
+              maxOutputTokens: 512, // Increased for Arabic completeness
               temperature: 0.7,
             }
           })
