@@ -15,10 +15,10 @@ export async function POST(req) {
       return NextResponse.json({ role: 'assistant', content: "يرجى ضبط مفتاح API أولاً." });
     }
 
-    // Stable and confirmed Gemini models
+    // Reverting to the most stable IDs possible
     const modelsToTry = [
       "gemini-1.5-flash",
-      "gemini-1.5-pro"
+      "gemini-1.5-flash-8b"
     ];
 
     const contents = messages.map(msg => ({
@@ -27,24 +27,19 @@ export async function POST(req) {
     }));
     if (contents.length > 0 && contents[0].role === "model") contents.shift();
 
-    // Context Injection
+    // Direct Instruction Injection
+    const languageInstruction = " (Respond in the same language as the user. Stay brief.)";
     if (contents.length > 0) {
-        contents[0].parts[0].text = `${SYSTEM_PROMPT}\n\nUser Question: ${contents[0].parts[0].text}`;
+        contents[0].parts[0].text = `PetZone System: ${SYSTEM_PROMPT}\n\nUser Question: ${contents[0].parts[0].text}${languageInstruction}`;
     }
 
     for (const modelId of modelsToTry) {
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${finalKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${finalKey}`;
         const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            contents,
-            generationConfig: {
-              maxOutputTokens: 800, 
-              temperature: 0.7,
-            }
-          })
+          body: JSON.stringify({ contents })
         });
 
         const data = await response.json();
@@ -54,6 +49,12 @@ export async function POST(req) {
           if (botText) {
             return NextResponse.json({ role: 'assistant', content: botText });
           }
+        } else {
+           console.error("Gemini Error:", data);
+           // If error is about API KEY, we show it
+           if (data.error?.message?.includes("API key")) {
+              return NextResponse.json({ role: 'assistant', content: "خطأ في مفتاح API الخاص بجوجل." });
+           }
         }
       } catch (err) {
         console.warn(`Fallback: ${modelId} failed`);
@@ -62,7 +63,7 @@ export async function POST(req) {
 
     return NextResponse.json({ 
       role: 'assistant', 
-      content: "عذراً، واجهت مشكلة في الاتصال بالسيرفر. يرجى المحاولة مرة أخرى." 
+      content: "عذراً، لا يمكن الاتصال بمحرك الذكاء الاصطناعي حالياً. يرجى مراجعة مفتاح API." 
     });
 
   } catch (error) {
