@@ -14,8 +14,10 @@ export async function POST(req) {
 
     // User-requested models in priority order
     const modelsToTry = [
+      "gemini-2.5-flash",
       "gemini-2.0-flash",
-      "gemini-1.5-flash" 
+      "gemini-2.5-flash-lite",
+      "gemini-1.5-flash" // Safety fallback
     ];
 
     const contents = messages.map(msg => ({
