@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const SYSTEM_PROMPT = `DEVELOPER_NOTE: You are the PetZone Assistant. Warm, professional, brief and informative. 
-- ALWAYS respond in the SAME LANGUAGE the user is using (e.g., if they speak Arabic, you MUST respond in Arabic).
-- Keep responses concise but COMPLETE. Do not cut off mid-sentence.
-- Use friendly, direct language.`;
+const SYSTEM_PROMPT = "You are the PetZone Assistant. Warm and professional. Respond in the same language as the user. Keep it brief.";
 
 export async function POST(req) {
   try {
@@ -15,22 +12,20 @@ export async function POST(req) {
       return NextResponse.json({ role: 'assistant', content: "يرجى ضبط مفتاح API أولاً." });
     }
 
-    // Reverting to the most stable IDs possible
     const modelsToTry = [
       "gemini-1.5-flash",
-      "gemini-1.5-flash-8b"
+      "gemini-1.5-pro"
     ];
 
     const contents = messages.map(msg => ({
       role: msg.isBot ? "model" : "user",
       parts: [{ text: msg.text || "" }]
     }));
+    
     if (contents.length > 0 && contents[0].role === "model") contents.shift();
 
-    // Direct Instruction Injection
-    const languageInstruction = " (Respond in the same language as the user. Stay brief.)";
     if (contents.length > 0) {
-        contents[0].parts[0].text = `PetZone System: ${SYSTEM_PROMPT}\n\nUser Question: ${contents[0].parts[0].text}${languageInstruction}`;
+      contents[0].parts[0].text = `${SYSTEM_PROMPT}\n\nUser Question: ${contents[0].parts[0].text}`;
     }
 
     for (const modelId of modelsToTry) {
@@ -49,12 +44,6 @@ export async function POST(req) {
           if (botText) {
             return NextResponse.json({ role: 'assistant', content: botText });
           }
-        } else {
-           console.error("Gemini Error:", data);
-           // If error is about API KEY, we show it
-           if (data.error?.message?.includes("API key")) {
-              return NextResponse.json({ role: 'assistant', content: "خطأ في مفتاح API الخاص بجوجل." });
-           }
         }
       } catch (err) {
         console.warn(`Fallback: ${modelId} failed`);
@@ -63,10 +52,10 @@ export async function POST(req) {
 
     return NextResponse.json({ 
       role: 'assistant', 
-      content: "عذراً، لا يمكن الاتصال بمحرك الذكاء الاصطناعي حالياً. يرجى مراجعة مفتاح API." 
+      content: "عذراً، الخدمة تحت الصيانة المؤقتة. يرجى المحاولة بعد قليل." 
     });
 
   } catch (error) {
-    return NextResponse.json({ role: 'assistant', content: 'تحذير: حدث خطأ غير متوقع في الاتصال.' });
+    return NextResponse.json({ role: 'assistant', content: 'حدث خطأ في النظام.' });
   }
 }
