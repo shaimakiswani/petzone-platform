@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const SYSTEM_PROMPT = "You are the PetZone Assistant. Warm, brief, professional. Identify user language and respond accordingly.";
+const SYSTEM_PROMPT = `DEVELOPER_NOTE: You are the PetZone Assistant. Warm, professional, concise.`;
 
 export async function POST(req) {
   try {
@@ -12,36 +12,49 @@ export async function POST(req) {
       return NextResponse.json({ role: 'assistant', content: "يرجى ضبط مفتاح API أولاً." });
     }
 
+    // User-requested models in priority order
+    const modelsToTry = [
+      "gemini-2.0-flash",
+      "gemini-1.5-flash" 
+    ];
+
     const contents = messages.map(msg => ({
       role: msg.isBot ? "model" : "user",
-      parts: [{ text: msg.text || "" }]
+      parts: [{ text: msg.text }]
     }));
-    
     if (contents.length > 0 && contents[0].role === "model") contents.shift();
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${finalKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents })
-    });
+    // Context Injection
+    if (contents.length > 0) {
+        contents[0].parts[0].text = `${SYSTEM_PROMPT}\n\nUser Question: ${contents[0].parts[0].text}`;
+    }
 
-    const data = await response.json();
+    for (const modelId of modelsToTry) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${finalKey}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents })
+        });
 
-    if (response.ok) {
-      const botText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (botText) {
-        return NextResponse.json({ role: 'assistant', content: botText });
+        const data = await response.json();
+
+        if (response.ok) {
+          const botText = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't process that.";
+          return NextResponse.json({ role: 'assistant', content: botText });
+        }
+      } catch (err) {
+        console.warn(`Fallback: ${modelId} failed, trying next...`);
       }
     }
 
-    // Diagnostic fallback for specific errors
-    const errorMsg = data.error?.message || "Connection failed";
     return NextResponse.json({ 
       role: 'assistant', 
-      content: `عذراً، هناك مشكلة في المفتاح المستخدم: ${errorMsg}` 
+      content: "عذراً، نظام المساعد الذكي يواجه تقلبات فنية حالياً. يرجى المحاولة بعد قليل." 
     });
 
   } catch (error) {
-    return NextResponse.json({ role: 'assistant', content: 'حدث خطأ غير متوقع.' });
+    return NextResponse.json({ role: 'assistant', content: 'تحذير: حدث خطأ غير متوقع في الاتصال.' });
   }
 }
