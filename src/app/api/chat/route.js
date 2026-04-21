@@ -6,7 +6,7 @@ export async function POST(req) {
   try {
     const { messages } = await req.json();
     const customKey = req.headers.get('x-gemini-key');
-    const finalKey = customKey || process.env.GEMINI_API_KEY;
+    let finalKey = customKey || process.env.GEMINI_API_KEY;
 
     if (!finalKey || finalKey.trim() === '') {
       return NextResponse.json({ role: 'assistant', content: "يرجى ضبط مفتاح API أولاً." });
@@ -44,6 +44,21 @@ export async function POST(req) {
           if (botText) {
             return NextResponse.json({ role: 'assistant', content: botText });
           }
+        } else if (response.status === 400 && customKey) {
+           // If the custom key failed, try one more time with the system key
+           console.warn("Custom key failed, falling back to system key...");
+           finalKey = process.env.GEMINI_API_KEY;
+           // Restart loop with system key by breaking to outer logic or just retrying here
+           const retryUrl = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${finalKey}`;
+           const retryResponse = await fetch(retryUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents })
+           });
+           const retryData = await retryResponse.json();
+           if (retryResponse.ok) {
+              return NextResponse.json({ role: 'assistant', content: retryData.candidates?.[0]?.content?.parts?.[0]?.text });
+           }
         }
       } catch (err) {
         console.warn(`Fallback: ${modelId} failed`);
@@ -52,7 +67,7 @@ export async function POST(req) {
 
     return NextResponse.json({ 
       role: 'assistant', 
-      content: "عذراً، الخدمة تحت الصيانة المؤقتة. يرجى المحاولة بعد قليل." 
+      content: "عذراً، نظام الذكاء الاصطناعي لا يستجيب حالياً. تأكد من صحة مفتاح API المحفوظ في الإعدادات." 
     });
 
   } catch (error) {
