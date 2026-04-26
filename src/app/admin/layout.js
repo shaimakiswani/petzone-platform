@@ -44,7 +44,6 @@ export default function AdminLayout({ children }) {
     { name: "Listings Moderation", icon: Package, href: "/admin/listings" },
     { name: "Reports Feed", icon: AlertTriangle, href: "/admin/reports" },
     { name: "Clinics & Hotels", icon: Stethoscope, href: "/admin/services" },
-    { name: "Categories / Rules", icon: Settings, href: "/admin/categories" },
   ];
 
   return (

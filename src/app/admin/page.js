@@ -112,9 +112,9 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 gap-10">
         {/* Recent Activity */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 p-8">
+        <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 p-8 shadow-sm">
            <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <Clock className="text-brand-500" /> Recent Listings
@@ -140,34 +140,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))}
-           </div>
-        </div>
-
-        {/* System Health */}
-        <div className="bg-brand-500 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-xl shadow-brand-500/30">
-           <Activity className="absolute -right-8 -bottom-8 w-40 h-40 opacity-10" />
-           <h2 className="text-xl font-black mb-6 flex items-center gap-2">
-             <Activity /> System Health
-           </h2>
-           <div className="space-y-6 relative z-10">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-bold opacity-80">API Response</span>
-                <span className="text-sm font-black text-emerald-300">Fast (120ms)</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-bold opacity-80">Database Latency</span>
-                <span className="text-sm font-black text-emerald-300">Optimal</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-bold opacity-80">Image Engine</span>
-                <span className="text-sm font-black text-emerald-300">Ready</span>
-              </div>
-              <div className="mt-8 pt-8 border-t border-white/10">
-                 <p className="text-xs opacity-70 mb-2">Platform Status</p>
-                 <div className="bg-emerald-400/20 text-emerald-300 px-4 py-2 rounded-xl border border-emerald-400/30 text-center font-black text-xs">
-                    All Systems Operational
-                 </div>
-              </div>
            </div>
         </div>
       </div>
