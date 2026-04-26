@@ -11,7 +11,7 @@ import {
   Filter,
   Search
 } from "lucide-react";
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
 export default function AdminSupportInbox() {
@@ -29,12 +29,23 @@ export default function AdminSupportInbox() {
     return () => unsubscribe();
   }, []);
 
-  const toggleStatus = async (ticketId, currentStatus) => {
+  const toggleStatus = async (ticketId, currentStatus, ticketData) => {
     try {
       const newStatus = currentStatus === "open" ? "closed" : "open";
       await updateDoc(doc(db, "support_tickets", ticketId), {
         status: newStatus
       });
+
+      // Notify user if resolving
+      if (newStatus === "closed" && ticketData.userId !== "guest") {
+        await addDoc(collection(db, "notifications"), {
+          userId: ticketData.userId,
+          message: `Correction: Your support message "${ticketData.message.substring(0, 40)}..." has been RESOLVED! 🐾✅`,
+          type: "support",
+          isRead: false,
+          createdAt: serverTimestamp()
+        });
+      }
     } catch (err) {
       console.error("Update Status Error:", err);
     }
@@ -121,7 +132,7 @@ export default function AdminSupportInbox() {
 
                 <div className="flex lg:flex-col justify-end gap-3 shrink-0">
                   <button 
-                    onClick={() => toggleStatus(ticket.id, ticket.status)}
+                    onClick={() => toggleStatus(ticket.id, ticket.status, ticket)}
                     className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-sm ${ticket.status === 'open' ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                   >
                     <CheckCircle size={18} />

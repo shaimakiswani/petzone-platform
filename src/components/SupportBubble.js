@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, X, Send, HelpCircle } from "lucide-react";
+import { MessageCircle, X, Send, HelpCircle, Bot } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
@@ -14,6 +14,9 @@ export default function SupportBubble() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+
+  // Use Bot icon too
+  const Icon = Bot;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -111,7 +114,7 @@ export default function SupportBubble() {
            <X className="relative z-10 text-gray-500 group-hover:text-white" size={28} />
          ) : (
            <div className="relative z-10 flex flex-col items-center">
-              <MessageCircle className="text-brand-500 group-hover:text-white" size={28} />
+              <Icon className="text-brand-500 group-hover:text-white" size={28} />
               <span className="text-[8px] font-black group-hover:text-white uppercase mt-0.5">Help</span>
            </div>
          )}
