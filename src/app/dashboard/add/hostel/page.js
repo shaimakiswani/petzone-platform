@@ -141,16 +141,20 @@ export default function AddHostelPage() {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>
-            <label className="block text-sm font-medium mb-1">{t('forms.hostel.location')}</label>
-            <input required type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" />
+            <label className="block text-sm font-medium mb-1">{t('forms.hostel.loc')}</label>
+            <input required type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" placeholder={isAr ? "المدينة، المنطقة" : "City, Area"} />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              {formData.category === 'sitter' ? (isAr ? 'سعر الجلسة ($)' : 'Price per Session ($)') : t('forms.hostel.price')}
+              {formData.category === 'sitter' ? (isAr ? 'سعر الجلسة (JOD)' : 'Price per Session (JOD)') : t('forms.hostel.price')}
             </label>
-            <input required type="number" min="0" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" />
+            <input required type="number" min="0" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" placeholder="0.00" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">{t('forms.hostel.phone')}</label>
+            <input required type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none font-bold text-brand-600" placeholder="07XXXXXXXX" />
           </div>
         </div>
         <div>

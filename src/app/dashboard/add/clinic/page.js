@@ -19,6 +19,7 @@ export default function AddClinicPage() {
     location: "", 
     rating: "5.0", 
     phone: "", 
+    price: "",
     image: "", 
     gallery: [],
     description: "" 
@@ -94,9 +95,19 @@ export default function AddClinicPage() {
           <label className="block text-sm font-medium mb-1">{t('forms.clinic.name')}</label>
           <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl" />
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">{t('forms.clinic.location')}</label>
-          <input required type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium mb-1">{t('forms.clinic.loc')}</label>
+            <input required type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl" placeholder={isAr ? "المدينة، المنطقة" : "City, Area"} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">{t('forms.clinic.phone')}</label>
+            <input required type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl font-bold text-brand-600" placeholder="07XXXXXXXX" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">{t('forms.clinic.price')}</label>
+            <input required type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl" placeholder="0.00" />
+          </div>
         </div>
 
         <div>

@@ -182,6 +182,10 @@ export default function AddPetPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">{t('forms.pet.location')}</label>
             <input required type="text" name="location" value={formData.location} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder={t('forms.pet.location_placeholder')} />
           </div>
+          <div className="md:col-span-2 lg:col-span-1">
+            <label className="block text-sm font-bold text-gray-700 mb-1">{t('forms.pet.phone')}</label>
+            <input required type="tel" name="phone" value={formData.phone} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 font-bold text-brand-600" placeholder="07XXXXXXXX" />
+          </div>
         </div>
 
         {/* Features */}

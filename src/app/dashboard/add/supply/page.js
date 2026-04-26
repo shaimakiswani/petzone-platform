@@ -22,6 +22,7 @@ export default function AddSupplyPage() {
     condition: "New",
     price: "", 
     phone: "", 
+    location: "",
     image: "", 
     gallery: [],
     description: "" 
@@ -167,10 +168,18 @@ export default function AddSupplyPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">{t('forms.supply.price')}</label>
             <input required type="number" name="price" value={formData.price} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" placeholder="0.00" />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">{t('forms.supply.phone')}</label>
+            <input required type="tel" name="phone" value={formData.phone} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none font-bold text-brand-600" placeholder="07XXXXXXXX" />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">{t('forms.supply.location')}</label>
+            <input required type="text" name="location" value={formData.location} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none" placeholder={isAr ? "المدينة، المنطقة" : "City, Area"} />
           </div>
         </div>
         <div>
