@@ -435,15 +435,6 @@ function ProfileContent() {
                       <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${isDarkMode ? 'translate-x-7' : 'translate-x-1'}`} />
                     </button>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl opacity-60">
-                    <div className="flex items-center gap-3">
-                      <Bell size={18} />
-                      <span className="text-sm font-medium text-gray-700">New Ad Notifications</span>
-                    </div>
-                    <div className="w-12 h-6 bg-gray-200 rounded-full relative">
-                       <div className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full" />
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
