@@ -63,18 +63,20 @@ export default function ChatbotWidget() {
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 p-4 rounded-full bg-brand-500 text-white shadow-lg shadow-brand-500/30 hover:bg-brand-600 transition-transform ${isOpen ? 'scale-0' : 'scale-100'}`}
+        className={`fixed bottom-6 right-6 p-4 rounded-full bg-brand-500 text-white shadow-lg shadow-brand-500/30 hover:bg-brand-600 transition-transform ${isOpen ? 'scale-0' : 'scale-100'} z-50`}
         aria-label="Open Chat"
       >
-        <MessageCircle size={24} />
+        <Bot size={28} />
       </button>
 
       {isOpen && (
         <div className="fixed bottom-6 right-6 w-80 sm:w-96 h-[500px] max-h-[80vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-100 z-50 animate-in slide-in-from-bottom-5">
           <div className="bg-brand-500 p-4 flex justify-between items-center text-white shrink-0">
             <div className="flex gap-2 items-center">
-              <MessageCircle size={20} />
-              <span className="font-semibold">PetZone Assistant</span>
+              <div className="bg-white/20 p-1 rounded-lg">
+                <Bot size={20} />
+              </div>
+              <span className="font-semibold text-sm">PetZone Robot</span>
             </div>
             <div className="flex gap-1">
               <button onClick={() => setShowSettings(!showSettings)} className="hover:bg-white/20 p-1.5 rounded-full transition">
