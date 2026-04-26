@@ -161,11 +161,19 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
           </div>
         )}
 
+        {item.isPremium && (
+          <div className={`absolute top-4 ${isAr ? 'left-4' : 'right-4'} z-10 animate-in fade-in zoom-in duration-500`}>
+            <div className="bg-gradient-to-r from-amber-400 to-yellow-600 text-white px-3 py-1.5 rounded-2xl text-[10px] font-black shadow-xl flex items-center gap-1.5 border border-amber-300">
+              ⭐ {t('common.premium')}
+            </div>
+          </div>
+        )}
+        
         {/* Price Badge - Only show if price is defined and not clinics usually */}
         {item.price !== undefined && type !== 'clinics' && (
           <div className={`absolute bottom-4 ${isAr ? 'left-4' : 'right-4'} z-10`}>
-            <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-white/40 ring-1 ring-black/5">
-              <p className="text-brand-600 font-black text-sm md:text-base">
+            <div className={`bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border flex items-center gap-2 ${item.isPremium ? 'border-amber-400 ring-2 ring-amber-100' : 'border-white/40 ring-1 ring-black/5'}`}>
+              <p className={`font-black text-sm md:text-base ${item.isPremium ? 'text-amber-600' : 'text-brand-600'}`}>
                 {item.price === 0 || item.price === "0" ? t('common.free') : `${item.price} JOD`}
               </p>
             </div>

@@ -239,6 +239,18 @@ function ProfileContent() {
             <LogOut size={20} /> {t('profile_tabs.sign_out')}
           </button>
         </div>
+
+        {/* Business Monetization CTA */}
+        <div className="mt-8 bg-gradient-to-br from-brand-500 to-brand-700 p-6 rounded-3xl text-white shadow-xl shadow-brand-500/20 relative overflow-hidden group">
+           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+             <Shield size={60} />
+           </div>
+           <h3 className="font-black text-lg mb-1 relative z-10">{isAr ? 'حساب الفئة الاحترافية' : 'Go Pro Account'}</h3>
+           <p className="text-[10px] text-brand-100 mb-4 opacity-90 relative z-10">{isAr ? 'وثق عيادتك أو متجرك، واحصل على ميزات بحث حصرية وشارة التوثيق الزرقاء.' : 'Verify your clinic or shop, get exclusive search placement and a pro badge.'}</p>
+           <button className="w-full bg-white text-brand-600 font-black py-2.5 rounded-xl text-xs hover:bg-brand-50 transition transform active:scale-95 relative z-10">
+             {isAr ? 'اشترك الآن (3 JOD/شهر)' : 'Subscribe Now (3 JOD/mo)'}
+           </button>
+        </div>
       </div>
 
       {/* Main Content Area */}
