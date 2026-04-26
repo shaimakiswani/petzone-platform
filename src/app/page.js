@@ -7,11 +7,11 @@ import { useLanguage } from "@/context/LanguageContext";
 export default function Home() {
   const { t, isAr } = useLanguage();
   
-  const features = [
+  const features = useMemo(() => [
     { icon: Heart, title: t('home.features.0.title'), desc: t('home.features.0.desc') },
     { icon: Shield, title: t('home.features.1.title'), desc: t('home.features.1.desc') },
     { icon: Search, title: t('home.features.2.title'), desc: t('home.features.2.desc') }
-  ];
+  ], [t]);
 
   return (
     <div className="flex flex-col gap-16 pb-16">

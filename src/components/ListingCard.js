@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { useLanguage } from "@/context/LanguageContext";
-import { useState, memo } from "react";
+import { useState, memo, useMemo } from "react";
 
 const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
   const { user } = useAuth();
@@ -17,6 +17,17 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
   const [reportReason, setReportReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const favorited = isFavorite(item.id);
+
+  const placeholders = useMemo(() => {
+    return {
+      pets: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=300&auto=format&fit=crop",
+      clinics: "https://images.unsplash.com/photo-1628154791759-5770bf39a139?q=80&w=300&auto=format&fit=crop",
+      supplies: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=300&auto=format&fit=crop",
+      hostels: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?q=80&w=300&auto=format&fit=crop"
+    };
+  }, []);
+
+  const displayImage = item.image || placeholders[type] || placeholders.pets;
 
   const handleReport = async (e) => {
     e.preventDefault();
@@ -65,7 +76,6 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
     }
 
     try {
-      // Check for existing chat
       const chatRef = collection(db, "chats");
       const q = query(chatRef, 
         where("participants", "array-contains", user.uid)
@@ -79,11 +89,9 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
       if (existingChat) {
         router.push(`/profile?tab=messages&chatId=${existingChat.id}`);
       } else {
-        // Fetch real owner name from profile
         const ownerSnap = await getDoc(doc(db, "users", item.userId));
         const ownerName = ownerSnap.exists() ? ownerSnap.data().name : (item.userDisplayName || "Owner");
 
-        // Create new chat
         const docRef = await addDoc(collection(db, "chats"), {
           participants: [user.uid, item.userId],
           participantNames: {
@@ -103,21 +111,12 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
     }
   };
 
-  // Icon mapping for fallback images
-  const FallbackIcon = () => {
-    if (type === 'pets') return <span className="text-4xl text-brand-300">🐾</span>;
-    if (type === 'supplies') return <Package className="w-12 h-12 text-brand-300" />;
-    if (type === 'clinics') return <ShieldCheck className="w-12 h-12 text-brand-300" />;
-    if (type === 'hostels') return <Home className="w-12 h-12 text-brand-300" />;
-    return <span className="text-4xl">📦</span>;
-  };
-
   return (
     <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition group relative flex flex-col h-full">
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden group">
         <img 
-          src={item.image || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=800"} 
+          src={displayImage} 
           alt={item.name} 
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
