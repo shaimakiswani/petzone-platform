@@ -209,7 +209,6 @@ export const translations = {
         desc_placeholder: "Tell us more about the item...",
         feats: {
           warranty: "Warranty",
-          delivery: "Quick Delivery",
           packaging: "Original Packaging",
           safe: "Safe for Pets",
           quality: "High Quality"
@@ -554,7 +553,6 @@ export const translations = {
         desc_placeholder: "أخبرنا المزيد عن المنتج...",
         feats: {
           warranty: "كفالة",
-          delivery: "توصيل سريع",
           packaging: "تغليف أصلي",
           safe: "آمن للحيوانات",
           quality: "جودة عالية"

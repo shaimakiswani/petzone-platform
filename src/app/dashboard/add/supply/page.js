@@ -33,11 +33,11 @@ export default function AddSupplyPage() {
 
   const FEATURE_OPTIONS = useMemo(() => [
     { id: "Warranty", label: t('forms.supply.feats.warranty') },
-    { id: "Quick Delivery", label: t('forms.supply.feats.delivery') },
     { id: "Original Packaging", label: t('forms.supply.feats.packaging') },
     { id: "Safe for Pets", label: t('forms.supply.feats.safe') },
     { id: "High Quality", label: t('forms.supply.feats.quality') },
-  ], [t]);
+    { id: "Fixed Price", label: isAr ? 'سعر ثابت' : 'Fixed Price' },
+  ], [t, isAr]);
 
   const toggleFeature = (featureId) => {
     setFeatures(prev => prev.includes(featureId) ? prev.filter(f => f !== featureId) : [...prev, featureId]);
