@@ -24,6 +24,14 @@ export default function AdminLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Hide support bubbles in admin
+  useEffect(() => {
+    const bubbles = document.querySelectorAll('.fixed.bottom-8, .fixed.bottom-6');
+    bubbles.forEach(b => b.style.display = 'none');
+    return () => bubbles.forEach(b => b.style.display = 'flex');
+  }, [pathname]);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'admin')) {
@@ -49,10 +57,31 @@ export default function AdminLayout({ children }) {
   ];
 
   return (
-    <div className="flex bg-gray-50 dark:bg-slate-900/50 rounded-[2.5rem] overflow-hidden min-h-[80vh] border border-gray-100 dark:border-slate-800 shadow-xl">
-      {/* Sidebar */}
-      <aside className={`bg-white dark:bg-slate-900 border-r border-gray-100 dark:border-slate-800 transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'} hidden md:flex flex-col`}>
-        <div className="p-6 flex items-center gap-3">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex flex-col md:flex-row md:rounded-[2.5rem] md:overflow-hidden md:border border-gray-100 dark:border-slate-800 shadow-xl">
+      {/* Mobile Header */}
+      <div className="md:hidden bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 p-4 flex justify-between items-center sticky top-0 z-[60]">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center text-white">
+            <ShieldCheck size={18} />
+          </div>
+          <span className="font-black text-sm dark:text-white">Admin Center</span>
+        </div>
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 bg-gray-50 dark:bg-slate-800 rounded-lg text-gray-500"
+        >
+          {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </div>
+
+      {/* Sidebar (Desktop & Mobile) */}
+      <aside className={`
+        fixed inset-0 z-[55] bg-white dark:bg-slate-900 md:relative md:flex md:translate-x-0 transition-transform duration-300
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        ${isSidebarOpen ? 'md:w-64' : 'md:w-20'} 
+        border-r border-gray-100 dark:border-slate-800 flex-col
+      `}>
+        <div className="p-6 hidden md:flex items-center gap-3">
           <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center text-white shrink-0">
             <ShieldCheck size={24} />
           </div>
@@ -64,27 +93,28 @@ export default function AdminLayout({ children }) {
           )}
         </div>
 
-        <nav className="flex-1 px-4 py-4 space-y-1">
+        <nav className="flex-1 px-4 py-8 md:py-4 space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all group ${
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-4 md:py-3 rounded-2xl transition-all group ${
                   isActive 
                     ? "bg-brand-500 text-white shadow-lg shadow-brand-500/20" 
                     : "text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800"
                 }`}
               >
                 <item.icon size={20} className={isActive ? "text-white" : "group-hover:text-brand-500 transition-colors"} />
-                {isSidebarOpen && <span className="text-sm font-bold">{item.name}</span>}
+                {(isSidebarOpen || isMobileMenuOpen) && <span className="text-sm font-bold">{item.name}</span>}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-50 dark:border-slate-800">
+        <div className="p-4 border-t border-gray-50 dark:border-slate-800 hidden md:block">
            <button 
              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
              className="w-full flex items-center justify-center p-2 rounded-xl bg-gray-50 dark:bg-slate-800 text-gray-400 hover:text-brand-500 transition-colors"
@@ -95,7 +125,7 @@ export default function AdminLayout({ children }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-6 lg:p-10">
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
         {children}
       </main>
     </div>
