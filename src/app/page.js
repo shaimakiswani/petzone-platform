@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight, Search, Heart, Shield } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
