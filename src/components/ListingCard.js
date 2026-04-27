@@ -1,4 +1,4 @@
-import { Heart, MapPin, Mars, Venus, Star, Package, ShieldCheck, Home, AlertTriangle, X } from "lucide-react";
+import { Heart, MapPin, Mars, Venus, Star, Package, ShieldCheck, Home, AlertTriangle, X, Phone } from "lucide-react";
 import Link from "next/link";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useAuth } from "@/context/AuthContext";
