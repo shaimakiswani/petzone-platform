@@ -7,7 +7,7 @@ import { collection, addDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { compressImage } from "@/utils/imageCompressor";
 import { PET_DATA } from "@/constants/petData";
-import { X as CloseIcon } from "lucide-react";
+import { X as CloseIcon, Heart } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function AddPetPage() {
