@@ -169,13 +169,22 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
         )}
         
         {/* Price Badge - Only show if price is defined and not clinics usually */}
-        {item.price !== undefined && type !== 'clinics' && (
+        {type !== 'clinics' && (
           <div className={`absolute bottom-4 ${isAr ? 'left-4' : 'right-4'} z-10`}>
-            <div className={`bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border flex items-center gap-2 ${item.isPremium ? 'border-amber-400 ring-2 ring-amber-100' : 'border-white/40 ring-1 ring-black/5'}`}>
-              <p className={`font-black text-sm md:text-base ${item.isPremium ? 'text-amber-600' : 'text-brand-600'}`}>
-                {item.price === 0 || item.price === "0" ? t('common.free') : `${item.price} JOD`}
-              </p>
-            </div>
+            {item.price === 0 || item.price === "0" || item.isAdoption ? (
+              <div className="bg-emerald-500 text-white px-4 py-2 rounded-2xl shadow-xl border border-emerald-400 flex items-center gap-2 animate-in zoom-in duration-300">
+                <Heart size={16} fill="currentColor" className="animate-pulse" />
+                <p className="font-black text-sm md:text-base uppercase tracking-tighter">
+                  {isAr ? 'للتبني' : 'For Adoption'}
+                </p>
+              </div>
+            ) : (
+              <div className={`bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border flex items-center gap-2 ${item.isPremium ? 'border-amber-400 ring-2 ring-amber-100' : 'border-white/40 ring-1 ring-black/5'}`}>
+                <p className={`font-black text-sm md:text-base ${item.isPremium ? 'text-amber-600' : 'text-brand-600'}`}>
+                  {item.price} <span className="text-[10px] opacity-70">JOD</span>
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -248,14 +257,14 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
 
         {/* Location & Contact area (Smaller, dim) */}
          <div className="mt-auto space-y-4">
-            <div className={`flex flex-col sm:flex-row sm:items-center gap-2 text-gray-400 text-xs ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+            <div className={`flex flex-col sm:flex-row sm:items-center gap-4 text-gray-400 text-xs ${isAr ? 'flex-row-reverse text-right' : ''}`}>
                <div className={`flex items-center gap-1 min-w-0 ${isAr ? 'flex-row-reverse' : ''}`}>
                  <MapPin size={14} className="shrink-0" />
                  <span className="truncate">{item.location || (isAr ? "أونلاين" : "Online")}</span>
                </div>
                {item.phone && (
                  <div className="flex items-center gap-1 shrink-0 bg-brand-50/50 px-2 py-0.5 rounded-md font-black text-brand-700 border border-brand-100/30">
-                   {item.phone}
+                    <Phone size={12} /> {item.phone}
                  </div>
                )}
             </div>

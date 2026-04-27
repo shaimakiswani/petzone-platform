@@ -20,7 +20,8 @@ export default function AddPetPage() {
     type: "Dog",
     breed: "German Shepherd",
     age: "0-6 months",
-    price: "",
+    price: 0,
+    isAdoption: false,
     location: "",
     phone: "",
     image: "",
@@ -174,10 +175,29 @@ export default function AddPetPage() {
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('forms.pet.price')}</label>
-            <input required type="number" min="0" name="price" value={formData.price} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder={t('forms.pet.price_placeholder')} />
+          <div className="md:col-span-2">
+             <div className="flex items-center gap-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <Heart className={`shrink-0 ${formData.isAdoption ? 'text-emerald-500 fill-emerald-500' : 'text-gray-300'}`} size={24} />
+                <div className="flex-1">
+                   <h4 className="text-sm font-black text-emerald-900">{isAr ? 'هذا الأليف للتبني؟' : 'Is this pet for adoption?'}</h4>
+                   <p className="text-[10px] text-emerald-600 opacity-80">{isAr ? 'عند التفعيل، سيظهر الإعلان كطلب تبني مجاني.' : 'When enabled, the listing will show as free for adoption.'}</p>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, isAdoption: !prev.isAdoption, price: !prev.isAdoption ? 0 : prev.price }))}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${formData.isAdoption ? 'bg-emerald-500' : 'bg-gray-200'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.isAdoption ? (isAr ? '-translate-x-7' : 'translate-x-7') : (isAr ? '-translate-x-1' : 'translate-x-1')}`} />
+                </button>
+             </div>
           </div>
+
+          {!formData.isAdoption && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('forms.pet.price')}</label>
+              <input required type="number" min="1" name="price" value={formData.price || ""} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder={t('forms.pet.price_placeholder')} />
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">{t('forms.pet.location')}</label>
             <input required type="text" name="location" value={formData.location} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder={t('forms.pet.location_placeholder')} />
