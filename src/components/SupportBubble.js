@@ -15,8 +15,8 @@ export default function SupportBubble() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
-  // Use Bot icon too
-  const Icon = Bot;
+  // Use MessageCircle icon for support
+  const Icon = MessageCircle;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
