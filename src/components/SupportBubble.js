@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { MessageCircle, X, Send, HelpCircle, History, ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
