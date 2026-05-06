@@ -313,7 +313,17 @@ function ProfileContent() {
                 ) : notifications.map((notif) => (
                   <div 
                     key={notif.id} 
-                    onClick={() => markNotifRead(notif.id)}
+                    onClick={() => {
+                      markNotifRead(notif.id);
+                      if (notif.type === 'support') {
+                        window.dispatchEvent(new CustomEvent('openSupport', { 
+                          detail: { 
+                            view: notif.ticketId ? 'chat' : 'history', 
+                            ticket: notif.ticketId ? { id: notif.ticketId } : null 
+                          } 
+                        }));
+                      }
+                    }}
                     className={`relative p-4 rounded-2xl border transition-all cursor-pointer group ${notif.isRead ? 'bg-gray-50 border-gray-100' : 'bg-brand-50 border-brand-200 shadow-sm'}`}
                   >
                     <div className="flex gap-4 items-start">

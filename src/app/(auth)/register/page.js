@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { PawPrint, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { PawPrint, Mail, Lock, User, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { doc, setDoc, query, collection, where, getDocs } from "firebase/firestore";
-import { db } from "@/firebase/config";
+import { db, auth } from "@/firebase/config";
+import { sendEmailVerification } from "firebase/auth";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -14,14 +15,34 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const router = useRouter();
+
+  // Simple encryption simulation for display in DB (Base64 + Salt)
+  const encryptPassword = (pass) => {
+    return btoa("petzone_" + pass + "_secured");
+  };
+
+  const validatePassword = (pass) => {
+    const hasNumber = /\d/.test(pass);
+    const hasLetter = /[a-zA-Z]/.test(pass);
+    const isLongEnough = pass.length >= 8;
+    return hasNumber && hasLetter && isLongEnough;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setError("");
+      
+      // Password Strength Check
+      if (!validatePassword(password)) {
+        setError("Password must be at least 8 characters long and contain both letters and numbers.");
+        return;
+      }
+
       setLoading(true);
 
       // Unique Name Check (Case-insensitive)
@@ -39,6 +60,9 @@ export default function RegisterPage() {
 
       const userCredential = await register(email, password);
       
+      // Send Email Verification
+      await sendEmailVerification(userCredential.user);
+      
       // Initialize basic user profile in Firestore
       await setDoc(doc(db, "users", userCredential.user.uid), {
         uid: userCredential.user.uid,
@@ -46,10 +70,14 @@ export default function RegisterPage() {
         name_lowercase: normalizedName,
         email: email,
         role: "user",
+        password_enc: encryptPassword(password), // Stored as requested
         createdAt: new Date().toISOString()
       });
 
-      router.push("/pets");
+      setSuccess(true);
+      setTimeout(() => {
+        router.push("/login");
+      }, 5000);
     } catch (err) {
       console.error(err);
       const code = err.code || "unknown";
@@ -58,7 +86,7 @@ export default function RegisterPage() {
       } else if (code === "auth/invalid-email") {
         setError("Please enter a valid email address.");
       } else if (code === "auth/weak-password") {
-        setError("Your password is too weak! It must be at least 6 characters.");
+        setError("Your password is too weak!");
       } else {
         setError("Failed to create account. Please try again.");
       }
@@ -66,6 +94,24 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
+          <Mail size={40} />
+        </div>
+        <h2 className="text-3xl font-black text-gray-900 mb-2">Check Your Email! 📧</h2>
+        <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
+          We've sent a verification link to <span className="font-bold text-gray-900">{email}</span>. 
+          Please verify your account to start using PetZone.
+        </p>
+        <Link href="/login" className="mt-8 text-brand-600 font-bold hover:underline">
+          Go to Login Page
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center py-12">
@@ -78,7 +124,9 @@ export default function RegisterPage() {
           <p className="text-gray-500 mt-2">Join the PetZone community today</p>
         </div>
 
-        {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-6 text-sm text-center">{error}</div>}
+        {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-6 text-sm text-center flex items-center justify-center gap-2">
+          <AlertCircle size={16} /> {error}
+        </div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -129,6 +177,9 @@ export default function RegisterPage() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+            <p className="text-[10px] text-gray-400 mt-2 px-1">
+              * Must be at least 8 characters with letters and numbers.
+            </p>
           </div>
           
           <button
@@ -150,3 +201,4 @@ export default function RegisterPage() {
     </div>
   );
 }
+

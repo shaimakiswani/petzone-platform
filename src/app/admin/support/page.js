@@ -51,6 +51,7 @@ export default function AdminSupportInbox() {
       if (userId !== "guest") {
         await addDoc(collection(db, "notifications"), {
           userId: userId,
+          ticketId: ticketId,
           message: `Admin replied to your support request: "${replyText.substring(0, 50)}..."`,
           type: "support",
           isRead: false,
@@ -74,6 +75,7 @@ export default function AdminSupportInbox() {
       if (newStatus === "closed" && ticketData.userId !== "guest") {
         await addDoc(collection(db, "notifications"), {
           userId: ticketData.userId,
+          ticketId: ticketId,
           message: `Your support message "${ticketData.message.substring(0, 40)}..." has been RESOLVED! 🐾✅`,
           type: "support",
           isRead: false,

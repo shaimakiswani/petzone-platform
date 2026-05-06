@@ -4,13 +4,16 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { PawPrint, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { PawPrint, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { auth } from "@/firebase/config";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
@@ -19,11 +22,39 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       setError("");
+      setMessage("");
       setLoading(true);
-      await login(email, password);
+      
+      const userCredential = await login(email, password);
+      
+      // Check if email is verified
+      if (!userCredential.user.emailVerified) {
+        setError("Please verify your email first. Check your inbox for the verification link.");
+        setLoading(false);
+        return;
+      }
+
       router.push("/pets");
     } catch (err) {
+      console.error(err);
       setError("Failed to sign in. Please check your credentials.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Please enter your email address first.");
+      return;
+    }
+    try {
+      setLoading(true);
+      await sendPasswordResetEmail(auth, email);
+      setMessage("Password reset email sent! Check your inbox.");
+      setError("");
+    } catch (err) {
+      setError("Failed to send reset email. Make sure the email is correct.");
     } finally {
       setLoading(false);
     }
@@ -40,7 +71,10 @@ export default function LoginPage() {
           <p className="text-gray-500 mt-2">Sign in to your PetZone account</p>
         </div>
 
-        {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-6 text-sm text-center">{error}</div>}
+        {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-6 text-sm text-center flex items-center justify-center gap-2">
+          <AlertCircle size={16} /> {error}
+        </div>}
+        {message && <div className="bg-emerald-50 text-emerald-600 p-3 rounded-xl mb-6 text-sm text-center">{message}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -58,7 +92,16 @@ export default function LoginPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <button 
+                type="button" 
+                onClick={handleForgotPassword}
+                className="text-xs text-brand-600 font-bold hover:underline"
+              >
+                Forgot Password?
+              </button>
+            </div>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -98,3 +141,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

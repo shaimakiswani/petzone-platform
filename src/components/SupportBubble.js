@@ -22,6 +22,16 @@ export default function SupportBubble() {
   const Icon = MessageCircle;
 
   useEffect(() => {
+    const handleOpenSupport = (e) => {
+      setIsOpen(true);
+      if (e.detail?.view) setView(e.detail.view);
+      if (e.detail?.ticket) setActiveTicket(e.detail.ticket);
+    };
+    window.addEventListener('openSupport', handleOpenSupport);
+    return () => window.removeEventListener('openSupport', handleOpenSupport);
+  }, []);
+
+  useEffect(() => {
     if (!user || !isOpen) return;
     const q = query(
       collection(db, "support_tickets"), 
