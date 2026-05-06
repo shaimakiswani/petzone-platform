@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import ListingCard from "@/components/ListingCard";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { PET_DATA } from "@/constants/petData";
@@ -83,9 +83,6 @@ export default function PetsPage() {
               className={`w-full ${isAr ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4'} py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-brand-100`}
             />
           </div>
-          <button className="p-2 border border-gray-200 rounded-full text-gray-600 hover:bg-gray-50 transition">
-            <SlidersHorizontal className="w-5 h-5" />
-          </button>
         </div>
       </div>
 

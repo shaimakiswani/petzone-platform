@@ -1,18 +1,62 @@
-import { Heart, MapPin, Mars, Venus, Star, Package, ShieldCheck, Home } from "lucide-react";
+import { Heart, MapPin, Mars, Venus, Star, Package, ShieldCheck, Home, AlertTriangle, X, Phone } from "lucide-react";
 import Link from "next/link";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { useLanguage } from "@/context/LanguageContext";
+import { useState, memo, useMemo } from "react";
 
-export default function ListingCard({ item, type = "pets" }) {
+const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
   const { user } = useAuth();
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { t, isAr } = useLanguage();
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const favorited = isFavorite(item.id);
+
+  const placeholders = useMemo(() => {
+    return {
+      pets: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=300&auto=format&fit=crop",
+      clinics: "https://images.unsplash.com/photo-1628154791759-5770bf39a139?q=80&w=300&auto=format&fit=crop",
+      supplies: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=300&auto=format&fit=crop",
+      hostels: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?q=80&w=300&auto=format&fit=crop"
+    };
+  }, []);
+
+  const displayImage = item.image || placeholders[type] || placeholders.pets;
+
+  const handleReport = async (e) => {
+    e.preventDefault();
+    if (!user) return alert("Please login to report listings");
+    if (!reportReason.trim()) return;
+
+    setSubmitting(true);
+    try {
+      const reportId = `${user.uid}_${item.id}`;
+      await setDoc(doc(db, "reports", reportId), {
+        userId: user.uid,
+        userName: user.displayName || "Anonymous",
+        listingId: item.id,
+        listingName: item.name,
+        listingImage: item.image,
+        listingCollection: type,
+        reason: reportReason,
+        createdAt: serverTimestamp(),
+      });
+      alert("Thank you! Report submitted for review.");
+      setShowReportModal(false);
+      setReportReason("");
+    } catch (err) {
+      console.error("Report Error:", err);
+      alert("Failed to send report");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleMessage = async () => {
     if (!user) {
@@ -32,7 +76,6 @@ export default function ListingCard({ item, type = "pets" }) {
     }
 
     try {
-      // Check for existing chat
       const chatRef = collection(db, "chats");
       const q = query(chatRef, 
         where("participants", "array-contains", user.uid)
@@ -46,11 +89,9 @@ export default function ListingCard({ item, type = "pets" }) {
       if (existingChat) {
         router.push(`/profile?tab=messages&chatId=${existingChat.id}`);
       } else {
-        // Fetch real owner name from profile
         const ownerSnap = await getDoc(doc(db, "users", item.userId));
         const ownerName = ownerSnap.exists() ? ownerSnap.data().name : (item.userDisplayName || "Owner");
 
-        // Create new chat
         const docRef = await addDoc(collection(db, "chats"), {
           participants: [user.uid, item.userId],
           participantNames: {
@@ -70,41 +111,47 @@ export default function ListingCard({ item, type = "pets" }) {
     }
   };
 
-  // Icon mapping for fallback images
-  const FallbackIcon = () => {
-    if (type === 'pets') return <span className="text-4xl text-brand-300">🐾</span>;
-    if (type === 'supplies') return <Package className="w-12 h-12 text-brand-300" />;
-    if (type === 'clinics') return <ShieldCheck className="w-12 h-12 text-brand-300" />;
-    if (type === 'hostels') return <Home className="w-12 h-12 text-brand-300" />;
-    return <span className="text-4xl">📦</span>;
-  };
-
   return (
     <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition group relative flex flex-col h-full">
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden group">
         <img 
-          src={item.image || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=800"} 
+          src={displayImage} 
           alt={item.name} 
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleFavorite(item.id);
-          }}
-          className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 shadow-lg z-20 ${
-            favorited 
-              ? "bg-brand-500 text-white shadow-brand-500/40 scale-110" 
-              : "bg-white/90 text-gray-400 hover:bg-white hover:text-brand-500 hover:scale-110"
-          }`}
-        >
-          <Heart size={18} fill={favorited ? "currentColor" : "none"} className="transition-transform" />
-        </button>
+        <div className={`absolute top-4 ${isAr ? 'left-4' : 'right-4'} flex flex-col gap-2 z-20`}>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              toggleFavorite(item.id);
+            }}
+            className={`p-2.5 rounded-full backdrop-blur-md transition-all duration-300 shadow-lg ${
+              favorited 
+                ? "bg-brand-500 text-white shadow-brand-500/40 scale-110" 
+                : "bg-white/90 text-gray-400 hover:bg-white hover:text-brand-500 hover:scale-110"
+            }`}
+          >
+            <Heart size={18} fill={favorited ? "currentColor" : "none"} className="transition-transform" />
+          </button>
+
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setShowReportModal(true);
+            }}
+            title={t('common.report') || "Report Listing"}
+            className="p-2.5 rounded-full bg-white/90 backdrop-blur-md text-gray-400 hover:text-amber-500 shadow-lg transition-all hover:scale-110"
+          >
+            <AlertTriangle size={18} />
+          </button>
+        </div>
         
         {/* Condition Badge for Supplies */}
         {type === "supplies" && item.condition && (
-          <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-2xl text-[9px] font-black uppercase tracking-tighter backdrop-blur-md shadow-lg border flex items-center gap-1.5 z-10 ${
+          <div className={`absolute top-4 ${isAr ? 'right-4' : 'left-4'} px-3 py-1.5 rounded-2xl text-[9px] font-black uppercase tracking-tighter backdrop-blur-md shadow-lg border flex items-center gap-1.5 z-10 ${
             item.condition === "New" 
               ? "bg-emerald-500/90 text-white border-emerald-400" 
               : "bg-orange-500/90 text-white border-orange-400"
@@ -113,14 +160,60 @@ export default function ListingCard({ item, type = "pets" }) {
           </div>
         )}
 
-        <div className={`absolute bottom-4 ${isAr ? 'right-4' : 'left-4'} z-10`}>
-          <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-white/40 ring-1 ring-black/5">
-            <p className="text-brand-600 font-black text-sm md:text-base">
-              {item.price === 0 || item.price === "0" ? t('common.free') : `$${item.price}`}
-            </p>
+        {item.isPremium && (
+          <div className={`absolute top-4 ${isAr ? 'left-4' : 'right-4'} z-10 animate-in fade-in zoom-in duration-500`}>
+            <div className="bg-gradient-to-r from-amber-400 to-yellow-600 text-white px-3 py-1.5 rounded-2xl text-[10px] font-black shadow-xl flex items-center gap-1.5 border border-amber-300">
+              ⭐ {t('common.premium')}
+            </div>
+          </div>
+        )}
+        
+        {/* Price Badge - Only show if price is defined and not clinics usually */}
+        {type !== 'clinics' && (
+          <div className={`absolute bottom-4 ${isAr ? 'left-4' : 'right-4'} z-10`}>
+            {item.price === 0 || item.price === "0" || item.isAdoption ? (
+              <div className="bg-emerald-500 text-white px-4 py-2 rounded-2xl shadow-xl border border-emerald-400 flex items-center gap-2 animate-in zoom-in duration-300">
+                <Heart size={16} fill="currentColor" className="animate-pulse" />
+                <p className="font-black text-sm md:text-base uppercase tracking-tighter">
+                  {isAr ? 'للتبني' : 'For Adoption'}
+                </p>
+              </div>
+            ) : (
+              <div className={`bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border flex items-center gap-2 ${item.isPremium ? 'border-amber-400 ring-2 ring-amber-100' : 'border-white/40 ring-1 ring-black/5'}`}>
+                <p className={`font-black text-sm md:text-base ${item.isPremium ? 'text-amber-600' : 'text-brand-600'}`}>
+                  {item.price} <span className="text-[10px] opacity-70">JOD</span>
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-lg">Report Listing</h3>
+              <button onClick={() => setShowReportModal(false)}><X size={20} /></button>
+            </div>
+            <textarea 
+              className="w-full p-3 border rounded-xl mb-4 text-sm"
+              placeholder="Reason for reporting..."
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              rows={3}
+            />
+            <button 
+              onClick={handleReport}
+              disabled={submitting || !reportReason.trim()}
+              className="w-full bg-red-500 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+            >
+              {submitting ? "Submitting..." : "Submit Report"}
+            </button>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Content Section */}
       <div className="p-6 flex flex-col flex-1">
@@ -139,7 +232,7 @@ export default function ListingCard({ item, type = "pets" }) {
                 <span className="bg-slate-50 text-slate-600 px-2 py-1 rounded-lg text-[10px] font-bold border border-slate-100">{item.breed}</span>
                 <span className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold border ${isAr ? 'flex-row-reverse' : ''} ${item.gender === 'Male' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-pink-50 text-pink-600 border-pink-100'}`}>
                    {item.gender === 'Male' ? <Mars size={10} /> : <Venus size={10} />}
-                   {item.gender === 'Male' ? (isAr ? 'ذكر' : 'Male') : (isAr ? 'أنثى' : 'Female')}
+                   {item.gender === 'Male' ? t('forms.pet.genders.male') : t('forms.pet.genders.female')}
                 </span>
               </>
            )}
@@ -164,14 +257,14 @@ export default function ListingCard({ item, type = "pets" }) {
 
         {/* Location & Contact area (Smaller, dim) */}
          <div className="mt-auto space-y-4">
-            <div className={`flex flex-col sm:flex-row sm:items-center gap-2 text-gray-400 text-xs ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+            <div className={`flex flex-col sm:flex-row sm:items-center gap-4 text-gray-400 text-xs ${isAr ? 'flex-row-reverse text-right' : ''}`}>
                <div className={`flex items-center gap-1 min-w-0 ${isAr ? 'flex-row-reverse' : ''}`}>
                  <MapPin size={14} className="shrink-0" />
                  <span className="truncate">{item.location || (isAr ? "أونلاين" : "Online")}</span>
                </div>
                {item.phone && (
                  <div className="flex items-center gap-1 shrink-0 bg-brand-50/50 px-2 py-0.5 rounded-md font-black text-brand-700 border border-brand-100/30">
-                   {item.phone}
+                    <Phone size={12} /> {item.phone}
                  </div>
                )}
             </div>
@@ -196,4 +289,6 @@ export default function ListingCard({ item, type = "pets" }) {
       </div>
     </div>
   );
-}
+});
+
+export default ListingCard;

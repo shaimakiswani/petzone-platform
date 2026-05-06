@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight, Search, Heart, Shield } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -7,11 +8,11 @@ import { useLanguage } from "@/context/LanguageContext";
 export default function Home() {
   const { t, isAr } = useLanguage();
   
-  const features = [
+  const features = useMemo(() => [
     { icon: Heart, title: t('home.features.0.title'), desc: t('home.features.0.desc') },
     { icon: Shield, title: t('home.features.1.title'), desc: t('home.features.1.desc') },
     { icon: Search, title: t('home.features.2.title'), desc: t('home.features.2.desc') }
-  ];
+  ], [t]);
 
   return (
     <div className="flex flex-col gap-16 pb-16">
@@ -47,6 +48,21 @@ export default function Home() {
             <p className="text-gray-600">{feature.desc}</p>
           </div>
         ))}
+      </section>
+      
+      {/* Monetization Proof-of-Concept: Sponsored Partners */}
+      <section className="bg-slate-50 rounded-3xl p-10 border border-slate-100">
+        <div className={`flex flex-col md:flex-row justify-between items-center gap-8 ${isAr ? 'flex-row-reverse' : ''}`}>
+          <div className="max-w-md">
+            <h2 className="text-2xl font-black text-slate-800 mb-2">{isAr ? 'رعاة PetZone' : 'PetZone Partners'}</h2>
+            <p className="text-slate-500 text-sm">{isAr ? 'انضم إلى شبكة شركائنا واحصل على مساحة إعلانية تصل لآلاف المهتمين بالحيوانات الأليفة.' : 'Join our partner network and reach thousands of dedicated pet owners.'}</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-6 opacity-40 grayscale group hover:grayscale-0 hover:opacity-100 transition-all duration-500 cursor-help">
+             <div className="font-black text-xl text-slate-400">PET FOOD CO</div>
+             <div className="font-black text-xl text-slate-400">VET CARE+</div>
+             <div className="font-black text-xl text-slate-400">PAW STORE</div>
+          </div>
+        </div>
       </section>
     </div>
   );

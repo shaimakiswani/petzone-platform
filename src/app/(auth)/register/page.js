@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { PawPrint, Mail, Lock, User } from "lucide-react";
+import { PawPrint, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { doc, setDoc, query, collection, where, getDocs } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -59,7 +60,7 @@ export default function RegisterPage() {
       } else if (code === "auth/weak-password") {
         setError("Your password is too weak! It must be at least 6 characters.");
       } else {
-        setError("Failed to create an account. Please try again later.");
+        setError("Failed to create account. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -67,14 +68,14 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center py-8">
+    <div className="flex flex-col items-center justify-center py-12">
       <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl shadow-brand-100/50 border border-brand-50">
         <div className="flex flex-col items-center mb-8">
           <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mb-4 text-brand-500">
             <PawPrint className="w-8 h-8" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">Join PetZone</h2>
-          <p className="text-gray-500 mt-2">Create an account to save pets & posts</p>
+          <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
+          <p className="text-gray-500 mt-2">Join the PetZone community today</p>
         </div>
 
         {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-6 text-sm text-center">{error}</div>}
@@ -113,13 +114,20 @@ export default function RegisterPage() {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition"
+                className="w-full pl-10 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition"
                 placeholder="••••••••"
               />
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none p-1"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
           </div>
           

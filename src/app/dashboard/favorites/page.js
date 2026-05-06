@@ -7,10 +7,12 @@ import { db } from "@/firebase/config";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function FavoritesPage() {
   const { favorites, loading: favLoading } = useFavorites();
   const { user, loading: authLoading } = useAuth();
+  const { t, isAr } = useLanguage();
   const router = useRouter();
 
   const [items, setItems] = useState([]);
@@ -29,7 +31,6 @@ export default function FavoritesPage() {
         return;
       }
       try {
-        // Fetch all categories to find the favorited items
         const [petsSnap, suppliesSnap, clinicsSnap, hostelsSnap] = await Promise.all([
           getDocs(collection(db, "pets")),
           getDocs(collection(db, "supplies")),
@@ -59,26 +60,26 @@ export default function FavoritesPage() {
   }, [favorites, favLoading, user, authLoading, router]);
 
   if (authLoading || favLoading || loading) {
-    return <div className="text-center py-20 text-gray-500">Loading your favorites...</div>;
+    return <div className="text-center py-20 text-gray-500">{t('favorites.loading')}</div>;
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className={`max-w-7xl mx-auto px-4 py-8 ${isAr ? 'rtl' : 'ltr'}`}>
       <div className="mb-12">
-        <h1 className="text-4xl font-black text-gray-900 mb-2">My Wishlist ({items.length})</h1>
-        <p className="text-gray-500">Items and pets you&apos;ve saved for later.</p>
+        <h1 className="text-4xl font-black text-gray-900 mb-2">{t('favorites.title')} ({items.length})</h1>
+        <p className="text-gray-500">{t('favorites.desc')}</p>
       </div>
 
       {items.length === 0 ? (
         <div className="text-center py-24 bg-white rounded-[40px] border border-gray-100 shadow-sm">
           <span className="text-7xl block mb-6 animate-pulse">❤️</span>
-          <h2 className="text-2xl font-bold text-gray-700 mb-2">Your wishlist is empty</h2>
-          <p className="text-gray-500 mb-8 max-w-sm mx-auto">Explore our marketplace and tap the heart icon to save your favorite listings here!</p>
+          <h2 className="text-2xl font-bold text-gray-700 mb-2">{t('favorites.empty')}</h2>
+          <p className="text-gray-500 mb-8 max-w-sm mx-auto">{t('favorites.empty_desc')}</p>
           <button 
             onClick={() => router.push('/pets')} 
             className="bg-brand-500 text-white font-black px-8 py-3 rounded-2xl hover:bg-brand-600 transition shadow-lg shadow-brand-500/20"
           >
-            Start Exploring
+            {t('favorites.btn_explore')}
           </button>
         </div>
       ) : (

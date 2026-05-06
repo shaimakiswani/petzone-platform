@@ -2,32 +2,43 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { db } from "@/firebase/config";
 import { collection, addDoc } from "firebase/firestore";
 import { compressImage } from "@/utils/imageCompressor";
-
 import { X as CloseIcon } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function AddClinicPage() {
   const { user } = useAuth();
+  const { t, isAr } = useLanguage();
   const router = useRouter();
+
   const [formData, setFormData] = useState({ 
     name: "", 
     location: "", 
     rating: "5.0", 
     phone: "", 
+    price: "",
     image: "", 
     gallery: [],
     description: "" 
   });
+
   const [services, setServices] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
-  const SERVICE_OPTIONS = ["Emergency 24/7", "Surgery", "Pharmacy", "Laboratory", "Vaccination", "X-Ray"];
+  const SERVICE_OPTIONS = useMemo(() => [
+    { id: "Emergency 24/7", label: t('forms.clinic.srvs.emergency') },
+    { id: "Surgery", label: t('forms.clinic.srvs.surgery') },
+    { id: "Pharmacy", label: t('forms.clinic.srvs.pharmacy') },
+    { id: "Laboratory", label: t('forms.clinic.srvs.lab') },
+    { id: "Vaccination", label: t('forms.clinic.srvs.vax') },
+    { id: "X-Ray", label: t('forms.clinic.srvs.xray') },
+  ], [t]);
 
-  const toggleService = (service) => {
-    setServices(prev => prev.includes(service) ? prev.filter(s => s !== service) : [...prev, service]);
+  const toggleService = (serviceId) => {
+    setServices(prev => prev.includes(serviceId) ? prev.filter(s => s !== serviceId) : [...prev, serviceId]);
   };
 
   const handleCoverUpload = async (e) => {
@@ -59,7 +70,7 @@ export default function AddClinicPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
-    if (!formData.image) return alert("Please upload a cover image!");
+    if (!formData.image) return alert(t('forms.error_image'));
     setSubmitting(true);
     try {
       await addDoc(collection(db, "clinics"), {
@@ -69,61 +80,72 @@ export default function AddClinicPage() {
         userDisplayName: user.displayName || user.email.split("@")[0],
         createdAt: new Date().toISOString()
       });
-      alert("Clinic listed successfully!");
+      alert(t('forms.success_clinic'));
       router.push("/clinics");
-    } catch (err) { alert("Failed"); } finally { setSubmitting(false); }
+    } catch (err) { alert(t('forms.error_submit')); } finally { setSubmitting(false); }
   };
 
+  if (!user) return null;
+
   return (
-    <div className="max-w-2xl mx-auto py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Add a Clinic</h1>
+    <div className={`max-w-2xl mx-auto py-8 px-4 ${isAr ? 'rtl' : 'ltr'}`}>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6 font-display text-center">{t('forms.clinic.title')}</h1>
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-1">Clinic Name</label>
+          <label className="block text-sm font-medium mb-1">{t('forms.clinic.name')}</label>
           <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl" />
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Location</label>
-          <input required type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium mb-1">{t('forms.clinic.loc')}</label>
+            <input required type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl" placeholder={isAr ? "المدينة، المنطقة" : "City, Area"} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">{t('forms.clinic.phone')}</label>
+            <input required type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl font-bold text-brand-600" placeholder="07XXXXXXXX" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">{t('forms.clinic.price')}</label>
+            <input required type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl" placeholder="0.00" />
+          </div>
         </div>
 
         <div>
-           <label className="block text-sm font-bold text-gray-700 mb-3">Clinic Services</label>
+           <label className="block text-sm font-bold text-gray-700 mb-3">{t('forms.clinic.services')}</label>
            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
              {SERVICE_OPTIONS.map(service => (
                <button
-                 key={service}
+                 key={service.id}
                  type="button"
-                 onClick={() => toggleService(service)}
+                 onClick={() => toggleService(service.id)}
                  className={`flex items-center justify-center px-4 py-2 rounded-xl border text-sm font-medium transition ${
-                   services.includes(service)
+                   services.includes(service.id)
                      ? "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/20"
                      : "bg-white border-gray-200 text-gray-600 hover:border-blue-200"
                  }`}
                >
-                 {service}
+                 {service.label}
                </button>
              ))}
            </div>
         </div>
 
         <div>
-           <label className="block text-sm font-medium mb-1">Description</label>
+           <label className="block text-sm font-medium mb-1">{t('forms.clinic.desc')}</label>
            <textarea 
              required 
              rows={4}
              value={formData.description} 
              onChange={e => setFormData({...formData, description: e.target.value})} 
              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl resize-none"
-             placeholder="Tell us more about your clinic..."
+             placeholder={t('forms.clinic.desc_placeholder')}
            ></textarea>
         </div>
         <div>
-          <label className="block text-sm font-bold text-gray-900 mb-4">Clinic Media</label>
+          <label className="block text-sm font-bold text-gray-900 mb-4">{t('forms.clinic.media')}</label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Box 1: Cover */}
             <div className="bg-blue-50/50 p-5 rounded-3xl border-2 border-dashed border-blue-200 hover:border-blue-400 transition group relative">
-              <label className="block text-xs font-black text-blue-600 uppercase mb-3 tracking-widest">1. Card Cover Image (Required)</label>
+              <label className="block text-xs font-black text-blue-600 uppercase mb-3 tracking-widest">{t('forms.clinic.cover')}</label>
               <input 
                 required={!formData.image}
                 type="file" 
@@ -131,7 +153,7 @@ export default function AddClinicPage() {
                 onChange={handleCoverUpload} 
                 className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-brand-500 file:text-white cursor-pointer" 
               />
-              <p className="text-[10px] text-gray-400 mt-2">Main image for the clinic list.</p>
+              <p className="text-[10px] text-gray-400 mt-2">{t('forms.clinic.cover_desc')}</p>
               {formData.image && (
                 <div className="mt-4 relative w-24 h-24 rounded-2xl overflow-hidden border-4 border-white shadow-lg animate-in zoom-in duration-300">
                   <img src={formData.image} className="w-full h-full object-cover" />
@@ -139,9 +161,8 @@ export default function AddClinicPage() {
               )}
             </div>
 
-            {/* Box 2: Gallery */}
             <div className="bg-slate-50 p-5 rounded-3xl border-2 border-dashed border-slate-200 hover:border-slate-400 transition group relative">
-              <label className="block text-xs font-black text-slate-500 uppercase mb-3 tracking-widest">2. Detailed Gallery (Max 5)</label>
+              <label className="block text-xs font-black text-slate-500 uppercase mb-3 tracking-widest">{t('forms.clinic.gallery')}</label>
               <input 
                 type="file" 
                 multiple
@@ -149,7 +170,7 @@ export default function AddClinicPage() {
                 onChange={handleGalleryUpload} 
                 className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-slate-200 file:text-slate-700 cursor-pointer" 
               />
-              <p className="text-[10px] text-gray-400 mt-2">Display your facilities and equipment.</p>
+              <p className="text-[10px] text-gray-400 mt-2">{t('forms.clinic.gallery_desc')}</p>
               <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-none">
                 {formData.gallery.map((img, i) => (
                   <div key={i} className="relative shrink-0 w-16 h-16 group/img rounded-xl overflow-hidden border-2 border-white shadow-sm">
@@ -167,7 +188,9 @@ export default function AddClinicPage() {
             </div>
           </div>
         </div>
-        <button disabled={submitting} type="submit" className="w-full bg-brand-500 text-white font-bold py-4 rounded-xl hover:bg-brand-600 transition">Publish Clinic</button>
+        <button disabled={submitting} type="submit" className="w-full bg-brand-500 text-white font-bold py-4 rounded-xl hover:bg-brand-600 transition shadow-lg shadow-brand-500/30">
+          {submitting ? t('forms.posting') : t('forms.publish')}
+        </button>
       </form>
     </div>
   );

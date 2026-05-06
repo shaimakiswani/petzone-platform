@@ -3,11 +3,11 @@
 import { useEffect, useState, use, Suspense } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
-import { collection, query, where, getDocs, doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, deleteDoc, updateDoc, onSnapshot, orderBy } from "firebase/firestore";
 import { updateProfile, sendPasswordResetEmail } from "firebase/auth";
 import { auth, db } from "@/firebase/config";
 import ListingCard from "@/components/ListingCard";
-import { LogOut, User, Settings, Package, Trash2, Shield, Moon, Sun, Bell, Camera, Globe, Check } from "lucide-react";
+import { LogOut, User, Settings, Package, Trash2, Shield, Moon, Sun, Bell, Camera, Globe, Check, MessageSquare } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 import ChatSystem from "@/components/ChatSystem";
@@ -20,8 +20,9 @@ function ProfileContent() {
   const queryTab = searchParams.get("tab");
   
   const [myAds, setMyAds] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [loadingAds, setLoadingAds] = useState(true);
-  const [activeTab, setActiveTab] = useState(queryTab || "ads"); // ads, messages, settings
+  const [activeTab, setActiveTab] = useState(queryTab || "ads"); // ads, messages, settings, notifications
   const [displayName, setDisplayName] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -29,6 +30,40 @@ function ProfileContent() {
   useEffect(() => {
     if (queryTab) setActiveTab(queryTab);
   }, [queryTab]);
+
+  useEffect(() => {
+    if (!user) return;
+    // Fetch notifications (sorting on client-side to avoid index error)
+    const q = query(collection(db, "notifications"), where("userId", "==", user.uid));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const notifs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      notifs.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+        return dateB - dateA;
+      });
+      setNotifications(notifs);
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const markNotifRead = async (notifId) => {
+    try {
+      await updateDoc(doc(db, "notifications", notifId), { isRead: true });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const deleteNotification = async (notifId, e) => {
+    e.stopPropagation();
+    if (!confirm(t('common.delete_confirm') || 'Are you sure you want to delete this notification?')) return;
+    try {
+      await deleteDoc(doc(db, "notifications", notifId));
+    } catch (err) {
+      console.error("Error deleting notification:", err);
+    }
+  };
 
   useEffect(() => {
     if (user?.displayName) setDisplayName(user.displayName);
@@ -135,7 +170,7 @@ function ProfileContent() {
   }, [user, authLoading, router]);
 
   const handleDelete = async (adId, type) => {
-    if (!confirm("Are you sure you want to delete this listing?")) return;
+    if (!confirm(t('profile.delete_ad_confirm'))) return;
     try {
       await deleteDoc(doc(db, type, adId));
       setMyAds(prev => prev.filter(ad => ad.id !== adId));
@@ -161,7 +196,7 @@ function ProfileContent() {
           <div className="w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center text-brand-500 mb-4">
             <User size={40} />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">{isAr ? 'مرحباً' : 'Hi'}, {user.displayName || user.email?.split("@")[0]}!</h2>
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">{t('profile.hi')}, {user.displayName || user.email?.split("@")[0]}!</h2>
           <p className="text-gray-400 text-xs">{user.email}</p>
         </div>
         
@@ -176,7 +211,20 @@ function ProfileContent() {
             onClick={() => setActiveTab("messages")}
             className={`flex items-center gap-3 w-full p-3 ${isAr ? 'flex-row-reverse text-right' : 'text-left'} rounded-xl font-medium transition ${activeTab === 'messages' ? 'bg-brand-50 text-brand-600' : 'hover:bg-gray-50 text-gray-700'}`}
           >
-            <Bell size={20} /> {t('profile_tabs.messages')}
+            <MessageSquare size={20} /> {t('profile_tabs.messages')}
+          </button>
+          <button 
+            onClick={() => setActiveTab("notifications")}
+            className={`flex items-center justify-between gap-3 w-full p-3 ${isAr ? 'flex-row-reverse text-right' : 'text-left'} rounded-xl font-medium transition ${activeTab === 'notifications' ? 'bg-brand-50 text-brand-600' : 'hover:bg-gray-50 text-gray-700'}`}
+          >
+            <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <Bell size={20} /> {t('profile_tabs.notifications')}
+            </div>
+            {notifications.filter(n => !n.isRead).length > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                {notifications.filter(n => !n.isRead).length}
+              </span>
+            )}
           </button>
           <button 
             onClick={() => setActiveTab("settings")}
@@ -190,6 +238,18 @@ function ProfileContent() {
           >
             <LogOut size={20} /> {t('profile_tabs.sign_out')}
           </button>
+        </div>
+
+        {/* Business Monetization CTA */}
+        <div className="mt-8 bg-gradient-to-br from-brand-500 to-brand-700 p-6 rounded-3xl text-white shadow-xl shadow-brand-500/20 relative overflow-hidden group">
+           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+             <Shield size={60} />
+           </div>
+           <h3 className="font-black text-lg mb-1 relative z-10">{isAr ? 'حساب الفئة الاحترافية' : 'Go Pro Account'}</h3>
+           <p className="text-[10px] text-brand-100 mb-4 opacity-90 relative z-10">{isAr ? 'وثق عيادتك أو متجرك، واحصل على ميزات بحث حصرية وشارة التوثيق الزرقاء.' : 'Verify your clinic or shop, get exclusive search placement and a pro badge.'}</p>
+           <button className="w-full bg-white text-brand-600 font-black py-2.5 rounded-xl text-xs hover:bg-brand-50 transition transform active:scale-95 relative z-10">
+             {isAr ? 'اشترك الآن (3 JOD/شهر)' : 'Subscribe Now (3 JOD/mo)'}
+           </button>
         </div>
       </div>
 
@@ -209,7 +269,7 @@ function ProfileContent() {
             ) : myAds.length === 0 ? (
               <div className="text-center py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                 <span className="text-4xl block mb-2">📦</span>
-                <p className="text-gray-500 font-medium">You haven&apos;t posted any listings yet.</p>
+                <p className="text-gray-500 font-medium">{t('profile.no_ads')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -220,14 +280,14 @@ function ProfileContent() {
                       <button 
                         onClick={() => handleDelete(ad.id, ad.type)}
                         className="p-2 bg-red-500/80 rounded-full hover:bg-red-600 text-white transition backdrop-blur-sm shadow-sm"
-                        title="Delete Ad"
+                        title={t('profile.delete_ad')}
                       >
                         <Trash2 size={16} />
                       </button>
                       <button 
                         onClick={() => router.push(`/dashboard/edit/${ad.type}/${ad.id}`)}
                         className="p-2 bg-brand-500/80 rounded-full hover:bg-brand-600 text-white transition backdrop-blur-sm shadow-sm"
-                        title="Edit Ad"
+                        title={t('profile.edit_ad')}
                       >
                         <Settings size={16} />
                       </button>
@@ -240,6 +300,44 @@ function ProfileContent() {
         ) : activeTab === "messages" ? (
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 overflow-hidden">
              <ChatSystem />
+          </div>
+        ) : activeTab === "notifications" ? (
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+             <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">{t('profile_tabs.notifications')}</h2>
+                {notifications.length > 0 && <span className="text-xs text-gray-400 font-bold">{notifications.length} {isAr ? 'إشعارات' : 'Total'}</span>}
+             </div>
+             <div className="space-y-4">
+                {notifications.length === 0 ? (
+                  <div className="text-center py-20 text-gray-400 font-bold italic">{isAr ? 'لا توجد إشعارات حتى الآن.' : 'No notifications yet.'}</div>
+                ) : notifications.map((notif) => (
+                  <div 
+                    key={notif.id} 
+                    onClick={() => markNotifRead(notif.id)}
+                    className={`relative p-4 rounded-2xl border transition-all cursor-pointer group ${notif.isRead ? 'bg-gray-50 border-gray-100' : 'bg-brand-50 border-brand-200 shadow-sm'}`}
+                  >
+                    <div className="flex gap-4 items-start">
+                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${notif.type === 'moderation' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
+                          <Shield size={20} />
+                       </div>
+                       <div className="flex-1">
+                          <p className={`text-sm md:text-base font-black pr-8 ${notif.isRead ? 'text-gray-500' : 'text-gray-900'}`}>
+                            {notif.message}
+                          </p>
+                          <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold">{new Date(notif.createdAt?.toDate?.() || notif.createdAt).toLocaleString()}</p>
+                       </div>
+                    </div>
+                    {/* Delete Notification Button */}
+                    <button 
+                      onClick={(e) => deleteNotification(notif.id, e)}
+                      className={`absolute ${isAr ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100`}
+                      title="Delete Notification"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+             </div>
           </div>
         ) : (
           <div className="space-y-6">
@@ -336,15 +434,6 @@ function ProfileContent() {
                     >
                       <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${isDarkMode ? 'translate-x-7' : 'translate-x-1'}`} />
                     </button>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl opacity-60">
-                    <div className="flex items-center gap-3">
-                      <Bell size={18} />
-                      <span className="text-sm font-medium text-gray-700">New Ad Notifications</span>
-                    </div>
-                    <div className="w-12 h-6 bg-gray-200 rounded-full relative">
-                       <div className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full" />
-                    </div>
                   </div>
                 </div>
               </div>

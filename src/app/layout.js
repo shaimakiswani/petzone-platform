@@ -15,6 +15,8 @@ export const metadata = {
   description: "Find your new best friend, supplies, clinics, and more.",
 };
 
+import SupportBubble from "@/components/SupportBubble";
+
 export default function RootLayout({ children }) {
   return (
     <html>
@@ -28,6 +30,7 @@ export default function RootLayout({ children }) {
                   {children}
                 </main>
                 <ChatbotWidget />
+                <SupportBubble />
               </FavoritesProvider>
             </AuthProvider>
           </LanguageProvider>

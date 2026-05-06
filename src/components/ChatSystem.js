@@ -22,9 +22,11 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { Send, User, ChevronLeft, Trash2 } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function ChatSystem() {
   const { user } = useAuth();
+  const { t, isAr } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const chatIdFromUrl = searchParams.get("chatId");
@@ -70,7 +72,7 @@ export default function ChatSystem() {
     return () => unsubscribe();
   }, [user]);
 
-  // 1.5. Dynamic Name Resolution: Fetch real names for all chat participants
+  // 1.5. Dynamic Name Resolution
   useEffect(() => {
     if (chats.length === 0) return;
 
@@ -108,7 +110,7 @@ export default function ChatSystem() {
     resolveNames();
   }, [chats, user, resolvedNames]);
 
-  // 2. Clear unread status when focusing on a chat
+  // 2. Clear unread status
   useEffect(() => {
     if (!activeChat || !user) return;
 
@@ -121,20 +123,18 @@ export default function ChatSystem() {
   }, [activeChat, user]);
 
   const handleSelectChat = (chat) => {
-    // Navigate will trigger the useMemo and state updates
     const params = new URLSearchParams(searchParams);
     params.set("chatId", chat.id);
     router.push(`/profile?${params.toString()}`, { scroll: false });
   };
 
   const handleCloseChat = () => {
-    // Simply removing the ID from the URL closes the chat deterministically
     const params = new URLSearchParams(searchParams);
     params.delete("chatId");
     router.push(`/profile?${params.toString()}`, { scroll: false });
   };
 
-  // 2. Fetch messages for the active chat
+  // 2. Fetch messages
   useEffect(() => {
     if (!activeChat) return;
 
@@ -155,7 +155,6 @@ export default function ChatSystem() {
 
     return () => {
       unsubscribe();
-      // Clearing messages in cleanup to avoid set-state-in-body error
       setMessages([]);
     };
   }, [activeChat]);
@@ -174,10 +173,7 @@ export default function ChatSystem() {
     setNewMessage("");
 
     try {
-      // Add message
       await addDoc(collection(db, "chats", activeChat.id, "messages"), msgData);
-      
-      // Update chat meta & set unread for the other person
       const otherId = activeChat.participants.find(p => p !== user.uid);
       await updateDoc(doc(db, "chats", activeChat.id), {
         lastMessage: tempMsg,
@@ -190,17 +186,14 @@ export default function ChatSystem() {
   };
 
   const handleDeleteMessage = async (msgId) => {
-    if (!confirm("Remove this message for everyone?")) return;
+    if (!confirm(t('chat.confirm_delete_msg'))) return;
     try {
-      // 1. Delete the message
       await deleteDoc(doc(db, "chats", activeChat.id, "messages", msgId));
-
-      // 2. Re-sync the lastMessage on the parent chat object
       const mRef = collection(db, "chats", activeChat.id, "messages");
       const q = query(mRef, orderBy("createdAt", "desc"), limit(1));
       const querySnapshot = await getDocs(q);
 
-      let newLastMsg = "Start a conversation";
+      let newLastMsg = t('chat.start');
       if (!querySnapshot.empty) {
         newLastMsg = querySnapshot.docs[0].data().text || "Sent a message";
       }
@@ -210,13 +203,12 @@ export default function ChatSystem() {
       });
     } catch (err) {
       console.error("Error deleting message:", err);
-      alert("Error deleting message");
     }
   };
 
   const handleDeleteChat = async (e, id) => {
     e.stopPropagation();
-    if (!confirm("Delete this entire conversation? This cannot be undone.")) return;
+    if (!confirm(t('chat.confirm_delete_chat'))) return;
     
     try {
       if (activeChat?.id === id) {
@@ -225,7 +217,6 @@ export default function ChatSystem() {
       await deleteDoc(doc(db, "chats", id));
     } catch (err) {
       console.error("Delete Chat Error:", err);
-      alert("Failed to delete conversation.");
     }
   };
 
@@ -235,44 +226,46 @@ export default function ChatSystem() {
     return resolvedNames[otherId] || chat.participantNames?.[otherId] || "User";
   };
 
-  if (loading) return <div className="text-center py-10 text-gray-400">Loading conversations...</div>;
+  if (loading) return <div className="text-center py-10 text-gray-400">Loading...</div>;
 
   return (
-    <div className="flex h-[600px] bg-gray-50 rounded-2xl overflow-hidden border border-gray-100">
+    <div className={`flex h-[600px] bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 ${isAr ? 'rtl' : 'ltr'}`}>
       {/* Sidebar List */}
       <div className={`w-full md:w-80 border-r border-gray-200 bg-white flex flex-col ${activeChat ? 'hidden md:flex' : 'flex'}`}>
-        <div className="p-4 border-b border-gray-100 font-bold text-gray-900">Conversations</div>
+        <div className={`p-4 border-b border-gray-100 font-bold text-gray-900 ${isAr ? 'text-right' : 'text-left'}`}>
+          {t('chat.title')}
+        </div>
         <div className="flex-1 overflow-y-auto">
           {chats.length === 0 ? (
-            <div className="p-8 text-center text-sm text-gray-400 italic">No messages yet</div>
+            <div className="p-8 text-center text-sm text-gray-400 italic">{t('chat.no_messages')}</div>
           ) : (
             chats.map(chat => (
               <div key={chat.id} className="group relative">
                 <button 
                   onClick={() => handleSelectChat(chat)}
-                  className={`w-full p-4 flex items-start gap-3 hover:bg-gray-50 transition text-left border-b border-gray-50 ${activeChat?.id === chat.id ? 'bg-brand-50 border-brand-100' : ''}`}
+                  className={`w-full p-4 flex items-start gap-3 hover:bg-gray-50 transition border-b border-gray-50 ${isAr ? 'text-right' : 'text-left'} ${activeChat?.id === chat.id ? 'bg-brand-50 border-brand-100' : ''}`}
                 >
                   <div className="relative shrink-0">
                     <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-600">
                       <User size={20} />
                     </div>
                     {chat.unreadBy?.includes(user.uid) && (
-                      <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white" />
+                      <div className={`absolute -top-1 ${isAr ? '-left-1' : '-right-1'} w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white`} />
                     )}
                   </div>
-                  <div className="flex-1 overflow-hidden pr-6">
+                  <div className={`flex-1 overflow-hidden ${isAr ? 'pl-8' : 'pr-8'}`}>
                     <div className="font-bold text-gray-900 truncate flex justify-between items-center gap-2">
-                      <span>{getOtherParticipantName(chat)}</span>
-                      {chat.unreadBy?.includes(user.uid) && <span className="text-[10px] bg-brand-500 text-white px-1.5 rounded-full">New</span>}
+                      <span className="truncate">{getOtherParticipantName(chat)}</span>
+                      {chat.unreadBy?.includes(user.uid) && <span className="text-[10px] bg-brand-500 text-white px-1.5 rounded-full shrink-0">{t('chat.new_tag')}</span>}
                     </div>
                     <div className={`text-xs truncate ${chat.unreadBy?.includes(user.uid) ? 'text-brand-600 font-bold' : 'text-gray-500'}`}>
-                      {chat.lastMessage || "Start a conversation"}
+                      {chat.lastMessage || t('chat.start')}
                     </div>
                   </div>
                 </button>
                 <button
                   onClick={(e) => handleDeleteChat(e, chat.id)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 sm:opacity-100"
+                  className={`absolute ${isAr ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 sm:opacity-100`}
                   title="Delete Conversation"
                 >
                   <Trash2 size={16} />
@@ -288,10 +281,10 @@ export default function ChatSystem() {
         {activeChat ? (
           <>
             {/* Header */}
-            <div className="p-4 border-b border-gray-100 flex items-center gap-3">
+            <div className={`p-4 border-b border-gray-100 flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
               <button 
                 onClick={handleCloseChat} 
-                className="md:hidden p-1.5 -ml-1 text-gray-400 hover:text-brand-500 hover:bg-brand-50 rounded-lg transition"
+                className={`md:hidden p-1.5 text-gray-400 hover:text-brand-500 hover:bg-brand-50 rounded-lg transition ${isAr ? '-mr-1 rotate-180' : '-ml-1'}`}
               >
                 <ChevronLeft size={24} />
               </button>
@@ -302,8 +295,8 @@ export default function ChatSystem() {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
               {messages.map((msg, i) => (
-                <div key={msg.id} className={`flex group ${msg.senderId === user.uid ? 'justify-end' : 'justify-start'}`}>
-                  <div className="max-w-[75%] flex flex-col items-end">
+                <div key={msg.id} className={`flex group ${msg.senderId === user.uid ? (isAr ? 'justify-start' : 'justify-end') : (isAr ? 'justify-end' : 'justify-start')}`}>
+                  <div className={`max-w-[75%] flex flex-col ${msg.senderId === user.uid ? (isAr ? 'items-start' : 'items-end') : (isAr ? 'items-end' : 'items-start')}`}>
                     <div className={`p-3 rounded-2xl text-sm relative ${
                       msg.senderId === user.uid 
                         ? 'bg-brand-500 text-white rounded-tr-none' 
@@ -313,7 +306,7 @@ export default function ChatSystem() {
                       {msg.senderId === user.uid && (
                         <button 
                           onClick={() => handleDeleteMessage(msg.id)}
-                          className="absolute -left-8 top-1/2 -translate-y-1/2 p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                          className={`absolute ${isAr ? '-right-8' : '-left-8'} top-1/2 -translate-y-1/2 p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition`}
                           title="Delete message"
                         >
                           <Trash2 size={14} />
@@ -327,22 +320,22 @@ export default function ChatSystem() {
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-100 flex gap-2">
+            <form onSubmit={handleSendMessage} className={`p-4 border-t border-gray-100 flex gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
               <input 
                 value={newMessage}
                 onChange={e => setNewMessage(e.target.value)}
-                placeholder="Type your message..." 
+                placeholder={t('chat.type_placeholder')} 
                 className="flex-1 px-4 py-2 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-brand-400 text-sm"
               />
-              <button disabled={!newMessage.trim()} className="p-2 bg-brand-500 text-white rounded-xl hover:bg-brand-600 disabled:opacity-50 transition">
+              <button disabled={!newMessage.trim()} className={`p-2 bg-brand-500 text-white rounded-xl hover:bg-brand-600 disabled:opacity-50 transition ${isAr ? 'rotate-180' : ''}`}>
                 <Send size={18} />
               </button>
             </form>
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-4">
-            <span className="text-6xl">💬</span>
-            <p>Select a conversation to start chatting.</p>
+            <span className="text-6xl text-brand-200">💬</span>
+            <p className="font-bold">{t('chat.start')}</p>
           </div>
         )}
       </div>
