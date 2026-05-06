@@ -18,6 +18,9 @@ import {
   X,
   MessageSquare
 } from "lucide-react";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "@/firebase/config";
+
 
 export default function AdminLayout({ children }) {
   const { user, loading } = useAuth();
@@ -25,6 +28,17 @@ export default function AdminLayout({ children }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [supportCount, setSupportCount] = useState(0);
+
+  // Fetch open support tickets count
+  useEffect(() => {
+    if (!user || user.role !== 'admin') return;
+    const q = query(collection(db, "support_tickets"), where("status", "==", "open"));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      setSupportCount(snap.size);
+    });
+    return () => unsubscribe();
+  }, [user]);
 
   // Hide support bubbles in admin
   useEffect(() => {
@@ -108,7 +122,16 @@ export default function AdminLayout({ children }) {
                 }`}
               >
                 <item.icon size={20} className={isActive ? "text-white" : "group-hover:text-brand-500 transition-colors"} />
-                {(isSidebarOpen || isMobileMenuOpen) && <span className="text-sm font-bold">{item.name}</span>}
+                {(isSidebarOpen || isMobileMenuOpen) && (
+                  <div className="flex-1 flex justify-between items-center">
+                    <span className="text-sm font-bold">{item.name}</span>
+                    {item.name === "Support Inbox" && supportCount > 0 && (
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isActive ? 'bg-white text-brand-600' : 'bg-red-500 text-white animate-pulse'}`}>
+                        {supportCount}
+                      </span>
+                    )}
+                  </div>
+                )}
               </Link>
             );
           })}
