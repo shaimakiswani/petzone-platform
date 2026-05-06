@@ -9,7 +9,8 @@ import {
   Trash2, 
   CheckCircle, 
   Filter,
-  Search
+  Search,
+  Send
 } from "lucide-react";
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, serverTimestamp, arrayUnion } from "firebase/firestore";
 import { db } from "@/firebase/config";
@@ -228,4 +229,3 @@ export default function AdminSupportInbox() {
     </div>
   );
 }
-
