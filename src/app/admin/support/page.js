@@ -11,7 +11,7 @@ import {
   Filter,
   Search
 } from "lucide-react";
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, serverTimestamp, arrayUnion } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
 export default function AdminSupportInbox() {
@@ -19,6 +19,7 @@ export default function AdminSupportInbox() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all"); // all, open, closed
   const [searchTerm, setSearchTerm] = useState("");
+  const [replyTexts, setReplyTexts] = useState({});
 
   useEffect(() => {
     const q = query(collection(db, "support_tickets"), orderBy("createdAt", "desc"));
@@ -28,6 +29,38 @@ export default function AdminSupportInbox() {
     });
     return () => unsubscribe();
   }, []);
+
+  const sendReply = async (ticketId, userId, ticketMessage) => {
+    const replyText = replyTexts[ticketId];
+    if (!replyText?.trim()) return;
+
+    try {
+      await updateDoc(doc(db, "support_tickets", ticketId), {
+        responses: arrayUnion({
+          text: replyText,
+          sender: "admin",
+          createdAt: new Date().toISOString()
+        })
+      });
+
+      // Clear input
+      setReplyTexts(prev => ({ ...prev, [ticketId]: "" }));
+
+      // Notify user
+      if (userId !== "guest") {
+        await addDoc(collection(db, "notifications"), {
+          userId: userId,
+          message: `Admin replied to your support request: "${replyText.substring(0, 50)}..."`,
+          type: "support",
+          isRead: false,
+          createdAt: serverTimestamp()
+        });
+      }
+    } catch (err) {
+      console.error("Send Reply Error:", err);
+      alert("Failed to send reply.");
+    }
+  };
 
   const toggleStatus = async (ticketId, currentStatus, ticketData) => {
     try {
@@ -40,7 +73,7 @@ export default function AdminSupportInbox() {
       if (newStatus === "closed" && ticketData.userId !== "guest") {
         await addDoc(collection(db, "notifications"), {
           userId: ticketData.userId,
-          message: `Correction: Your support message "${ticketData.message.substring(0, 40)}..." has been RESOLVED! 🐾✅`,
+          message: `Your support message "${ticketData.message.substring(0, 40)}..." has been RESOLVED! 🐾✅`,
           type: "support",
           isRead: false,
           createdAt: serverTimestamp()
@@ -68,7 +101,7 @@ export default function AdminSupportInbox() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-4 md:p-8">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
@@ -108,43 +141,84 @@ export default function AdminSupportInbox() {
         ) : (
           <div className="divide-y divide-gray-50">
             {filteredTickets.map((ticket) => (
-              <div key={ticket.id} className={`p-8 hover:bg-gray-50 transition-colors flex flex-col lg:flex-row gap-6 ${ticket.status === 'closed' ? 'opacity-60' : ''}`}>
-                <div className="flex-1 space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-brand-50 text-brand-500 rounded-full flex items-center justify-center font-bold">
-                      {ticket.userName?.charAt(0) || "G"}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900">{ticket.userName}</h3>
-                      <div className="flex items-center gap-4 text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
-                        <span className="flex items-center gap-1"><Mail size={12} /> {ticket.userEmail}</span>
-                        <span className="flex items-center gap-1"><Clock size={12} /> {ticket.createdAt?.toDate?.().toLocaleString()}</span>
+              <div key={ticket.id} className={`p-8 hover:bg-gray-50 transition-colors flex flex-col gap-6 ${ticket.status === 'closed' ? 'opacity-60' : ''}`}>
+                <div className="flex flex-col lg:flex-row gap-6">
+                  <div className="flex-1 space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-brand-50 text-brand-500 rounded-full flex items-center justify-center font-bold">
+                        {ticket.userName?.charAt(0) || "G"}
                       </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900">{ticket.userName}</h3>
+                        <div className="flex items-center gap-4 text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                          <span className="flex items-center gap-1"><Mail size={12} /> {ticket.userEmail}</span>
+                          <span className="flex items-center gap-1"><Clock size={12} /> {ticket.createdAt?.toDate?.().toLocaleString() || "Just now"}</span>
+                        </div>
+                      </div>
+                      <span className={`ml-auto lg:ml-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${ticket.status === 'open' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                        {ticket.status}
+                      </span>
                     </div>
-                    <span className={`ml-auto lg:ml-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${ticket.status === 'open' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                      {ticket.status}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 text-sm leading-relaxed bg-gray-50 p-6 rounded-2xl border border-gray-100 italic">
-                    "{ticket.message}"
-                  </p>
-                </div>
+                    <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 italic relative">
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        "{ticket.message}"
+                      </p>
+                      <div className="absolute -left-2 top-4 w-4 h-4 bg-gray-50 border-l border-t border-gray-100 rotate-45" />
+                    </div>
 
-                <div className="flex lg:flex-col justify-end gap-3 shrink-0">
-                  <button 
-                    onClick={() => toggleStatus(ticket.id, ticket.status, ticket)}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-sm ${ticket.status === 'open' ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-                  >
-                    <CheckCircle size={18} />
-                    {ticket.status === 'open' ? "Mark as Resolved" : "Re-open Ticket"}
-                  </button>
-                  <button 
-                    onClick={() => deleteTicket(ticket.id)}
-                    className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-500 rounded-2xl font-bold text-sm hover:bg-red-500 hover:text-white transition-all shadow-sm"
-                  >
-                    <Trash2 size={18} />
-                    Delete Record
-                  </button>
+                    {/* Chat History */}
+                    {ticket.responses && ticket.responses.length > 0 && (
+                      <div className="space-y-4 mt-6 pl-8 border-l-2 border-brand-100">
+                        {ticket.responses.map((resp, idx) => (
+                          <div key={idx} className={`flex flex-col ${resp.sender === 'admin' ? 'items-end' : 'items-start'}`}>
+                            <div className={`max-w-[90%] p-4 rounded-2xl text-sm ${resp.sender === 'admin' ? 'bg-brand-500 text-white rounded-tr-none' : 'bg-white border border-gray-100 text-gray-700 rounded-tl-none'}`}>
+                              {resp.text}
+                            </div>
+                            <span className="text-[9px] text-gray-400 mt-1 uppercase font-bold">
+                              {resp.sender === 'admin' ? 'Admin' : 'User'} • {new Date(resp.createdAt).toLocaleTimeString()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Reply Input */}
+                    {ticket.status === 'open' && (
+                      <div className="flex gap-2 mt-4 pt-4 border-t border-gray-50">
+                        <input 
+                          type="text"
+                          value={replyTexts[ticket.id] || ""}
+                          onChange={(e) => setReplyTexts(prev => ({ ...prev, [ticket.id]: e.target.value }))}
+                          placeholder="Type your response to the user..."
+                          className="flex-1 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-200"
+                        />
+                        <button 
+                          onClick={() => sendReply(ticket.id, ticket.userId, ticket.message)}
+                          className="px-6 py-3 bg-brand-500 text-white rounded-xl font-bold text-sm hover:bg-brand-600 transition shadow-md flex items-center gap-2"
+                        >
+                          <Send size={16} />
+                          Reply
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex lg:flex-col justify-end gap-3 shrink-0">
+                    <button 
+                      onClick={() => toggleStatus(ticket.id, ticket.status, ticket)}
+                      className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-sm ${ticket.status === 'open' ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                    >
+                      <CheckCircle size={18} />
+                      {ticket.status === 'open' ? "Resolve" : "Re-open"}
+                    </button>
+                    <button 
+                      onClick={() => deleteTicket(ticket.id)}
+                      className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-500 rounded-2xl font-bold text-sm hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                    >
+                      <Trash2 size={18} />
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -154,3 +228,4 @@ export default function AdminSupportInbox() {
     </div>
   );
 }
+

@@ -1,22 +1,44 @@
-"use client";
-
-import { useState } from "react";
-import { MessageCircle, X, Send, HelpCircle, Bot } from "lucide-react";
+import { useState, useEffect } from "react";
+import { MessageCircle, X, Send, HelpCircle, History, ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, orderBy, limit, onSnapshot, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
 export default function SupportBubble() {
   const { t, isAr } = useLanguage();
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [view, setView] = useState("new"); // new, history, chat
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [tickets, setTickets] = useState([]);
+  const [activeTicket, setActiveTicket] = useState(null);
 
   // Use MessageCircle icon for support
   const Icon = MessageCircle;
+
+  useEffect(() => {
+    if (!user || !isOpen) return;
+    const q = query(
+      collection(db, "support_tickets"), 
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc"),
+      limit(10)
+    );
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setTickets(list);
+      
+      // If we are in chat view, update the active ticket
+      if (activeTicket) {
+        const updated = list.find(t => t.id === activeTicket.id);
+        if (updated) setActiveTicket(updated);
+      }
+    });
+    return () => unsubscribe();
+  }, [user, isOpen, activeTicket?.id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,13 +53,14 @@ export default function SupportBubble() {
         message: message.trim(),
         status: "open",
         createdAt: serverTimestamp(),
+        responses: []
       });
       setSent(true);
       setMessage("");
       setTimeout(() => {
         setSent(false);
-        setIsOpen(false);
-      }, 3000);
+        setView("history");
+      }, 2000);
     } catch (err) {
       console.error("Support Ticket Error:", err);
       alert("Failed to send request. Please try again.");
@@ -46,59 +69,166 @@ export default function SupportBubble() {
     }
   };
 
+  const handleReply = async (e) => {
+    e.preventDefault();
+    if (!message.trim() || !activeTicket) return;
+    setLoading(true);
+
+    try {
+      await updateDoc(doc(db, "support_tickets", activeTicket.id), {
+        responses: arrayUnion({
+          text: message.trim(),
+          sender: "user",
+          createdAt: new Date().toISOString()
+        }),
+        status: "open" // Re-open if it was closed maybe? 
+      });
+      setMessage("");
+    } catch (err) {
+      console.error("Reply Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="fixed bottom-8 left-8 z-50">
+    <div className={`fixed bottom-8 ${isAr ? 'right-8' : 'left-8'} z-50`}>
       {/* Support Window */}
       {isOpen && (
-        <div className="absolute bottom-20 left-0 w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden transition-all animate-in slide-in-from-bottom-5 duration-300">
-          <div className="bg-brand-500 p-6 text-white flex justify-between items-center">
+        <div className={`absolute bottom-20 ${isAr ? 'right-0' : 'left-0'} w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden transition-all animate-in slide-in-from-bottom-5 duration-300 flex flex-col h-[500px]`}>
+          <div className="bg-brand-500 p-6 text-white flex justify-between items-center shrink-0">
             <div className="flex items-center gap-3">
+              {view !== "new" && (
+                <button onClick={() => setView(view === "chat" ? "history" : "new")} className="hover:bg-white/20 p-1 rounded-lg transition">
+                  <ArrowLeft size={20} />
+                </button>
+              )}
               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                 <HelpCircle size={24} />
               </div>
               <div>
-                <h3 className="font-bold text-sm">PetZone Support</h3>
+                <h3 className="font-bold text-sm">{view === "chat" ? "Conversation" : "PetZone Support"}</h3>
                 <p className="text-[10px] opacity-80">We're here to help!</p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1.5 rounded-lg transition">
-              <X size={20} />
-            </button>
+            <div className="flex gap-2">
+              {user && view === "new" && tickets.length > 0 && (
+                <button onClick={() => setView("history")} className="hover:bg-white/20 p-1.5 rounded-lg transition flex items-center gap-1">
+                  <History size={18} />
+                </button>
+              )}
+              <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1.5 rounded-lg transition">
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
-          <div className="p-6">
-            {sent ? (
-              <div className="text-center py-10 space-y-4">
-                <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto">
-                  <HelpCircle size={32} />
+          <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
+            {view === "new" ? (
+              sent ? (
+                <div className="text-center py-10 space-y-4 h-full flex flex-col justify-center">
+                  <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto">
+                    <HelpCircle size={32} />
+                  </div>
+                  <p className="text-sm font-bold text-gray-700">Request Sent! 🐾</p>
+                  <p className="text-xs text-gray-400">Our team will get back to you soon.</p>
                 </div>
-                <p className="text-sm font-bold text-gray-700">Request Sent! 🐾</p>
-                <p className="text-xs text-gray-400">Our team will get back to you soon.</p>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">How can we help?</label>
+                    <textarea 
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="Describe your issue or question..."
+                      className="w-full h-32 p-4 bg-white border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-brand-50 resize-none transition-all shadow-sm"
+                      required
+                    />
+                  </div>
+                  <button 
+                    disabled={loading}
+                    className="w-full bg-brand-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-brand-500/25 hover:bg-brand-600 transition active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2"
+                  >
+                    {loading ? "Sending..." : (
+                      <>
+                        <Send size={18} />
+                        Send Request
+                      </>
+                    )}
+                  </button>
+                  {user && tickets.length > 0 && (
+                    <button 
+                      type="button"
+                      onClick={() => setView("history")}
+                      className="w-full text-brand-600 text-xs font-bold py-2 hover:underline"
+                    >
+                      View my previous requests
+                    </button>
+                  )}
+                </form>
+              )
+            ) : view === "history" ? (
+              <div className="space-y-3">
+                <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">My Requests</h4>
+                {tickets.map(ticket => (
+                  <button 
+                    key={ticket.id}
+                    onClick={() => { setActiveTicket(ticket); setView("chat"); }}
+                    className="w-full bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:border-brand-300 transition-all text-left flex justify-between items-center group"
+                  >
+                    <div className="overflow-hidden">
+                      <p className="text-sm font-bold text-gray-700 truncate">{ticket.message}</p>
+                      <p className="text-[10px] text-gray-400 mt-1">{new Date(ticket.createdAt?.seconds * 1000).toLocaleDateString()}</p>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${ticket.status === 'open' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                      {ticket.status}
+                    </span>
+                  </button>
+                ))}
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">How can we help?</label>
-                  <textarea 
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Describe your issue or question..."
-                    className="w-full h-32 p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-brand-50 resize-none transition-all"
-                    required
-                  />
+              /* Chat View */
+              <div className="flex flex-col h-full">
+                <div className="flex-1 space-y-4 pb-4">
+                  {/* User's Original Message */}
+                  <div className="flex flex-col items-start">
+                    <div className="max-w-[90%] p-4 bg-white border border-gray-100 text-gray-700 rounded-2xl rounded-tl-none text-sm">
+                      <p className="font-bold text-[10px] text-brand-500 uppercase mb-1">My Request</p>
+                      {activeTicket.message}
+                    </div>
+                  </div>
+
+                  {/* Responses */}
+                  {activeTicket.responses?.map((resp, i) => (
+                    <div key={i} className={`flex flex-col ${resp.sender === 'admin' ? 'items-end' : 'items-start'}`}>
+                      <div className={`max-w-[90%] p-4 rounded-2xl text-sm ${resp.sender === 'admin' ? 'bg-brand-500 text-white rounded-tr-none shadow-md' : 'bg-white border border-gray-100 text-gray-700 rounded-tl-none shadow-sm'}`}>
+                        {resp.text}
+                      </div>
+                      <span className="text-[9px] text-gray-400 mt-1 uppercase font-bold">
+                        {resp.sender === 'admin' ? 'Admin' : 'Me'} • {new Date(resp.createdAt).toLocaleTimeString()}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <button 
-                  disabled={loading}
-                  className="w-full bg-brand-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-brand-500/25 hover:bg-brand-600 transition active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2"
-                >
-                  {loading ? "Sending..." : (
-                    <>
+
+                {activeTicket.status === 'open' && (
+                  <form onSubmit={handleReply} className="pt-4 border-t border-gray-100 flex gap-2">
+                    <input 
+                      type="text"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="Reply to admin..."
+                      className="flex-1 px-4 py-2 bg-white border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-200"
+                    />
+                    <button 
+                      disabled={loading || !message.trim()}
+                      className="p-2 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition disabled:opacity-50"
+                    >
                       <Send size={18} />
-                      Send Request
-                    </>
-                  )}
-                </button>
-              </form>
+                    </button>
+                  </form>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -122,3 +252,4 @@ export default function SupportBubble() {
     </div>
   );
 }
+
