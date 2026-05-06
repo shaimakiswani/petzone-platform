@@ -46,6 +46,7 @@ export const translations = {
       login: "Login",
       promote: "Promote Ad",
       sponsored: "Sponsored",
+
       free: "Free",
       verified: "Verified",
       safe: "Safe Stay",
@@ -390,6 +391,7 @@ export const translations = {
       login: "تسجيل الدخول",
       promote: "ميّز إعلانك",
       sponsored: "إعلان ممول",
+
       free: "مجاناً",
       verified: "موثق",
       safe: "إقامة آمنة",
