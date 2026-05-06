@@ -27,8 +27,14 @@ export default function LoginPage() {
       
       const userCredential = await login(email, password);
       
-      // Check if email is verified
-      if (!userCredential.user.emailVerified) {
+      // Fetch user doc to check if it's a new system account
+      const { doc, getDoc } = await import("firebase/firestore");
+      const { db } = await import("@/firebase/config");
+      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+      const userData = userDoc.data();
+
+      // Only enforce verification for accounts created with the new system (have password_enc)
+      if (userData?.password_enc && !userCredential.user.emailVerified) {
         setError("Please verify your email first. Check your inbox for the verification link.");
         setLoading(false);
         return;

@@ -107,23 +107,23 @@ export default function SupportBubble() {
     <div className={`fixed bottom-8 ${isAr ? 'right-8' : 'left-8'} z-50`}>
       {/* Support Window */}
       {isOpen && (
-        <div className={`absolute bottom-20 ${isAr ? 'right-0' : 'left-0'} w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden transition-all animate-in slide-in-from-bottom-5 duration-300 flex flex-col h-[500px]`}>
+        <div className={`absolute bottom-0 ${isAr ? 'right-0' : 'left-0'} w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden transition-all animate-in slide-in-from-bottom-5 duration-300 flex flex-col h-[500px]`}>
           <div className="bg-brand-500 p-6 text-white flex justify-between items-center shrink-0">
-            <div className="flex items-center gap-3">
+            <div className={`flex items-center gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
               {view !== "new" && (
                 <button onClick={() => setView(view === "chat" ? "history" : "new")} className="hover:bg-white/20 p-1 rounded-lg transition">
-                  <ArrowLeft size={20} />
+                  {isAr ? <ArrowLeft size={20} className="rotate-180" /> : <ArrowLeft size={20} />}
                 </button>
               )}
               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                 <HelpCircle size={24} />
               </div>
-              <div>
-                <h3 className="font-bold text-sm">{view === "chat" ? "Conversation" : "PetZone Support"}</h3>
-                <p className="text-[10px] opacity-80">We're here to help!</p>
+              <div className={isAr ? 'text-right' : 'text-left'}>
+                <h3 className="font-bold text-sm">{view === "chat" ? (isAr ? 'المحادثة' : 'Conversation') : (isAr ? 'دعم بيت زون' : 'PetZone Support')}</h3>
+                <p className="text-[10px] opacity-80">{isAr ? 'نحن هنا لمساعدتك' : "We're here to help!"}</p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className={`flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
               {user && view === "new" && tickets.length > 0 && (
                 <button onClick={() => setView("history")} className="hover:bg-white/20 p-1.5 rounded-lg transition flex items-center gap-1">
                   <History size={18} />
@@ -142,18 +142,20 @@ export default function SupportBubble() {
                   <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto">
                     <HelpCircle size={32} />
                   </div>
-                  <p className="text-sm font-bold text-gray-700">Request Sent! 🐾</p>
-                  <p className="text-xs text-gray-400">Our team will get back to you soon.</p>
+                  <p className="text-sm font-bold text-gray-700">{isAr ? 'تم إرسال الطلب! 🐾' : 'Request Sent! 🐾'}</p>
+                  <p className="text-xs text-gray-400">{isAr ? 'سيرد عليك فريقنا قريباً.' : 'Our team will get back to you soon.'}</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">How can we help?</label>
+                    <label className={`block text-xs font-black text-gray-400 uppercase tracking-widest px-1 ${isAr ? 'text-right' : 'text-left'}`}>
+                      {isAr ? 'كيف يمكننا مساعدتك؟' : 'How can we help?'}
+                    </label>
                     <textarea 
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Describe your issue or question..."
-                      className="w-full h-32 p-4 bg-white border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-brand-50 resize-none transition-all shadow-sm"
+                      placeholder={isAr ? 'صف مشكلتك أو سؤالك هنا...' : "Describe your issue or question..."}
+                      className={`w-full h-32 p-4 bg-white border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-brand-50 resize-none transition-all shadow-sm ${isAr ? 'text-right' : 'text-left'}`}
                       required
                     />
                   </div>
@@ -161,10 +163,10 @@ export default function SupportBubble() {
                     disabled={loading}
                     className="w-full bg-brand-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-brand-500/25 hover:bg-brand-600 transition active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2"
                   >
-                    {loading ? "Sending..." : (
+                    {loading ? (isAr ? 'جاري الإرسال...' : 'Sending...') : (
                       <>
-                        <Send size={18} />
-                        Send Request
+                        <Send size={18} className={isAr ? 'rotate-180' : ''} />
+                        {isAr ? 'إرسال الطلب' : 'Send Request'}
                       </>
                     )}
                   </button>
@@ -174,26 +176,28 @@ export default function SupportBubble() {
                       onClick={() => setView("history")}
                       className="w-full text-brand-600 text-xs font-bold py-2 hover:underline"
                     >
-                      View my previous requests
+                      {isAr ? 'عرض طلباتي السابقة' : 'View my previous requests'}
                     </button>
                   )}
                 </form>
               )
             ) : view === "history" ? (
               <div className="space-y-3">
-                <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">My Requests</h4>
+                <h4 className={`text-xs font-black text-gray-400 uppercase tracking-widest mb-4 ${isAr ? 'text-right' : 'text-left'}`}>
+                  {isAr ? 'طلباتي' : 'My Requests'}
+                </h4>
                 {tickets.map(ticket => (
                   <button 
                     key={ticket.id}
                     onClick={() => { setActiveTicket(ticket); setView("chat"); }}
-                    className="w-full bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:border-brand-300 transition-all text-left flex justify-between items-center group"
+                    className={`w-full bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:border-brand-300 transition-all flex justify-between items-center group ${isAr ? 'flex-row-reverse text-right' : 'text-left'}`}
                   >
                     <div className="overflow-hidden">
                       <p className="text-sm font-bold text-gray-700 truncate">{ticket.message}</p>
                       <p className="text-[10px] text-gray-400 mt-1">{new Date(ticket.createdAt?.seconds * 1000).toLocaleDateString()}</p>
                     </div>
                     <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${ticket.status === 'open' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                      {ticket.status}
+                      {ticket.status === 'open' ? (isAr ? 'مفتوح' : 'open') : (isAr ? 'محلول' : 'closed')}
                     </span>
                   </button>
                 ))}
@@ -203,40 +207,44 @@ export default function SupportBubble() {
               <div className="flex flex-col h-full">
                 <div className="flex-1 space-y-4 pb-4">
                   {/* User's Original Message */}
-                  <div className="flex flex-col items-start">
-                    <div className="max-w-[90%] p-4 bg-white border border-gray-100 text-gray-700 rounded-2xl rounded-tl-none text-sm">
-                      <p className="font-bold text-[10px] text-brand-500 uppercase mb-1">My Request</p>
+                  <div className={`flex flex-col ${isAr ? 'items-end' : 'items-start'}`}>
+                    <div className={`max-w-[90%] p-4 bg-white border border-gray-100 text-gray-700 rounded-2xl ${isAr ? 'rounded-tr-none text-right' : 'rounded-tl-none text-left'} text-sm`}>
+                      <p className="font-bold text-[10px] text-brand-500 uppercase mb-1">{isAr ? 'طلبي' : 'My Request'}</p>
                       {activeTicket.message}
                     </div>
                   </div>
 
                   {/* Responses */}
                   {activeTicket.responses?.map((resp, i) => (
-                    <div key={i} className={`flex flex-col ${resp.sender === 'admin' ? 'items-end' : 'items-start'}`}>
-                      <div className={`max-w-[90%] p-4 rounded-2xl text-sm ${resp.sender === 'admin' ? 'bg-brand-500 text-white rounded-tr-none shadow-md' : 'bg-white border border-gray-100 text-gray-700 rounded-tl-none shadow-sm'}`}>
+                    <div key={i} className={`flex flex-col ${resp.sender === 'admin' ? (isAr ? 'items-start' : 'items-end') : (isAr ? 'items-end' : 'items-start')}`}>
+                      <div className={`max-w-[90%] p-4 rounded-2xl text-sm shadow-sm ${
+                        resp.sender === 'admin' 
+                          ? 'bg-brand-500 text-white ' + (isAr ? 'rounded-tl-none text-right' : 'rounded-tr-none text-left') 
+                          : 'bg-white border border-gray-100 text-gray-700 ' + (isAr ? 'rounded-tr-none text-right' : 'rounded-tl-none text-left')
+                      }`}>
                         {resp.text}
                       </div>
-                      <span className="text-[9px] text-gray-400 mt-1 uppercase font-bold">
-                        {resp.sender === 'admin' ? 'Admin' : 'Me'} • {new Date(resp.createdAt).toLocaleTimeString()}
+                      <span className="text-[9px] text-gray-400 mt-1 uppercase font-bold px-1">
+                        {resp.sender === 'admin' ? (isAr ? 'الإدارة' : 'Admin') : (isAr ? 'أنا' : 'Me')} • {new Date(resp.createdAt).toLocaleTimeString()}
                       </span>
                     </div>
                   ))}
                 </div>
 
                 {activeTicket.status === 'open' && (
-                  <form onSubmit={handleReply} className="pt-4 border-t border-gray-100 flex gap-2">
+                  <form onSubmit={handleReply} className={`pt-4 border-t border-gray-100 flex gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
                     <input 
                       type="text"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Reply to admin..."
-                      className="flex-1 px-4 py-2 bg-white border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-200"
+                      placeholder={isAr ? 'اكتب رداً للإدارة...' : "Reply to admin..."}
+                      className={`flex-1 px-4 py-2 bg-white border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-200 ${isAr ? 'text-right' : 'text-left'}`}
                     />
                     <button 
                       disabled={loading || !message.trim()}
                       className="p-2 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition disabled:opacity-50"
                     >
-                      <Send size={18} />
+                      <Send size={18} className={isAr ? 'rotate-180' : ''} />
                     </button>
                   </form>
                 )}
@@ -247,21 +255,22 @@ export default function SupportBubble() {
       )}
 
       {/* Floating Button */}
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 bg-white rounded-full shadow-2xl flex items-center justify-center border border-gray-100 hover:scale-110 transition-all duration-300 group overflow-hidden"
-      >
-         <div className="absolute inset-0 bg-brand-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-         {isOpen ? (
-           <X className="relative z-10 text-gray-500 group-hover:text-white" size={28} />
-         ) : (
+      {!isOpen && (
+        <button 
+          onClick={() => { setIsOpen(true); setView("new"); }}
+          className="w-16 h-16 bg-white rounded-full shadow-2xl flex items-center justify-center border border-gray-100 hover:scale-110 transition-all duration-300 group overflow-hidden"
+        >
+           <div className="absolute inset-0 bg-brand-500 opacity-0 group-hover:opacity-100 transition-opacity" />
            <div className="relative z-10 flex flex-col items-center">
               <Icon className="text-brand-500 group-hover:text-white" size={28} />
-              <span className="text-[8px] font-black group-hover:text-white uppercase mt-0.5">Help</span>
+              <span className="text-[8px] font-black group-hover:text-white uppercase mt-0.5">
+                {isAr ? 'مساعدة' : 'Help'}
+              </span>
            </div>
-         )}
-      </button>
+        </button>
+      )}
     </div>
   );
 }
+
 
