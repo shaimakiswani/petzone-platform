@@ -39,13 +39,18 @@ export async function POST(req) {
     const data = await response.json();
 
     if (response.ok) {
+      console.log("Email sent successfully:", data.id);
       return NextResponse.json({ success: true, id: data.id });
     } else {
-      console.error("Resend Error:", data);
-      return NextResponse.json({ success: false, error: data.message }, { status: 500 });
+      console.error("Resend API Error Details:", data);
+      return NextResponse.json({ 
+        success: false, 
+        error: data.message || "Unknown Resend error",
+        details: data
+      }, { status: response.status });
     }
   } catch (error) {
-    console.error("API Error:", error);
-    return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
+    console.error("Critical API Error:", error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
