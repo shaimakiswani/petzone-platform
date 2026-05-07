@@ -22,18 +22,15 @@ export async function POST(req) {
       body: JSON.stringify({
         from: "PetZone <onboarding@resend.dev>",
         to: [email],
-        subject: "Verify your PetZone account 🐾",
+        subject: `Your Verification Code: ${otp} 🐾`,
         html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 20px;">
-            <h2 style="color: #ec4899; text-align: center;">Welcome to PetZone!</h2>
-            <p>Hi ${userName || "there"},</p>
-            <p>Thank you for joining our community. Please use the following code to verify your account:</p>
-            <div style="background: #fdf2f8; padding: 20px; border-radius: 15px; text-align: center; margin: 20px 0;">
-              <h1 style="letter-spacing: 10px; font-size: 32px; margin: 0; color: #db2777;">${otp}</h1>
+          <div style="font-family: sans-serif; text-align: center; padding: 40px; border: 2px solid #ec4899; border-radius: 30px; max-width: 500px; margin: 20px auto;">
+            <h1 style="color: #ec4899; margin-bottom: 10px;">PetZone</h1>
+            <p style="color: #666; font-size: 16px;">Use the code below to verify your account:</p>
+            <div style="background: #fdf2f8; padding: 30px; border-radius: 20px; margin: 30px 0;">
+              <span style="letter-spacing: 15px; font-size: 40px; font-weight: 900; color: #db2777; display: block; width: 100%;">${otp}</span>
             </div>
-            <p style="font-size: 12px; color: #666; text-align: center;">This code will expire soon. If you didn't request this, please ignore this email.</p>
-            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-            <p style="font-size: 10px; color: #999; text-align: center;">&copy; 2026 PetZone Platform. All rights reserved.</p>
+            <p style="color: #999; font-size: 12px;">This code is valid for 10 minutes.</p>
           </div>
         `,
       }),
