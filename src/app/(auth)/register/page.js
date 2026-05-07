@@ -84,113 +84,15 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString()
       });
 
-      // Simulation: Show code to user since no real email sender is connected
-      alert(`DEBUG: Your verification code is: ${code}\n(In production, this will be sent to your email)`);
-      
-      setStep("verify");
+      // Redirect to verification page
+      router.push(`/verify?email=${email}`);
     } catch (err) {
       console.error(err);
-      const code = err.code || "unknown";
-      if (code === "auth/email-already-in-use") {
-        setError("This email is already registered. Please login instead.");
-      } else if (code === "auth/invalid-email") {
-        setError("Please enter a valid email address.");
-      } else if (code === "auth/weak-password") {
-        setError("Your password is too weak!");
-      } else {
-        setError("Failed to create account. Please try again.");
-      }
+      setError(err.code === "auth/email-already-in-use" ? "Email already exists." : "Failed to create account.");
     } finally {
       setLoading(false);
     }
   };
-
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    if (otp === generatedOtp) {
-      try {
-        await updateDoc(doc(db, "users", tempUserId), {
-          isVerified: true,
-          verificationCode: null
-        });
-        setStep("success");
-      } catch (err) {
-        setError("Failed to verify. Please try again.");
-      }
-    } else {
-      setError("Invalid verification code. Please check and try again.");
-    }
-    setLoading(false);
-  };
-
-  if (step === "success") {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
-          <CheckCircle size={40} />
-        </div>
-        <h2 className="text-3xl font-black text-gray-900 mb-2">Account Ready! 🎉</h2>
-        <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
-          Your account has been successfully verified. You can now log in and start using PetZone.
-        </p>
-        <button 
-          onClick={() => router.push("/login")}
-          className="mt-8 bg-brand-500 text-white font-bold px-12 py-3 rounded-xl hover:bg-brand-600 transition shadow-lg"
-        >
-          Go to Login
-        </button>
-      </div>
-    );
-  }
-
-  if (step === "verify") {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 px-4">
-        <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-brand-50">
-          <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 text-blue-500">
-              <Mail className="w-8 h-8" />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900">Verify Email</h2>
-            <p className="text-gray-500 mt-2 text-center">We've sent a 6-digit code to <br/><span className="font-bold text-gray-900">{email}</span></p>
-          </div>
-
-          {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-6 text-sm text-center flex items-center justify-center gap-2">
-            <AlertCircle size={16} /> {error}
-          </div>}
-
-          <form onSubmit={handleVerify} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-center">Enter Verification Code</label>
-              <input
-                type="text"
-                maxLength="6"
-                required
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                className="w-full text-center text-3xl tracking-[1rem] font-black py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-400 focus:bg-white transition"
-                placeholder="000000"
-              />
-            </div>
-            <button
-              disabled={loading || otp.length < 6}
-              type="submit"
-              className="w-full bg-brand-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-brand-500/30 disabled:opacity-70 transition"
-            >
-              {loading ? "Verifying..." : "Verify & Continue"}
-            </button>
-          </form>
-          
-          <p className="mt-6 text-center text-xs text-gray-400">
-            Didn't receive the code? Check your spam folder or <button className="text-brand-600 font-bold">Resend</button>
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col items-center justify-center py-12">

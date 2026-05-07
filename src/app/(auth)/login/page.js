@@ -35,7 +35,18 @@ export default function LoginPage() {
 
       // Only enforce verification for accounts created with the new system (have password_enc)
       if (userData?.password_enc && !userData?.isVerified) {
-        setError("Your account is not verified. Please verify your email with the code provided.");
+        setError("Your account is not verified.");
+        setMessage(
+          <div className="mt-2">
+            <p className="text-xs mb-3">Please verify your account to continue.</p>
+            <button 
+              onClick={() => router.push(`/verify?email=${email}`)}
+              className="bg-brand-500 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-brand-600 transition"
+            >
+              Verify My Account Now
+            </button>
+          </div>
+        );
         setLoading(false);
         return;
       }
