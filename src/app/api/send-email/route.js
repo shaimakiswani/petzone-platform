@@ -6,7 +6,7 @@ export async function POST(req) {
 
     // IMPORTANT: Replace 're_123456789' with your real Resend API Key
     // You can get it for free from https://resend.com
-    const RESEND_API_KEY = process.env.RESEND_API_KEY || "re_your_api_key_here";
+    const RESEND_API_KEY = process.env.RESEND_API_KEY || "re_NkZ6We3j_LbN6ydrukPFXaDu2vTL4FYm4";
 
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
