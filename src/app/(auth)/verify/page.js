@@ -76,9 +76,12 @@ function VerifyContent() {
           verificationCode: newCode
         });
         
-        // In a real app, you'd trigger a serverless function here to send the email
-        console.log("New code generated:", newCode);
-        alert(`A new code has been sent to ${email} (Check your console or alert for now: ${newCode})`);
+        // Send Real Email via API
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, otp: newCode, userName: querySnapshot.docs[0].data().name }),
+        });
       }
     } catch (err) {
       setError("Failed to resend code.");

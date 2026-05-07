@@ -84,6 +84,17 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString()
       });
 
+      // Send Real Email via API
+      try {
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, otp: code, userName: name.trim() }),
+        });
+      } catch (mailErr) {
+        console.error("Mail Send Error:", mailErr);
+      }
+
       // Redirect to verification page
       router.push(`/verify?email=${email}`);
     } catch (err) {
