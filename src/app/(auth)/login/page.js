@@ -34,8 +34,8 @@ export default function LoginPage() {
       const userData = userDoc.data();
 
       // Only enforce verification for accounts created with the new system (have password_enc)
-      if (userData?.password_enc && !userCredential.user.emailVerified) {
-        setError("Please verify your email first. Check your inbox for the verification link.");
+      if (userData?.password_enc && !userData?.isVerified) {
+        setError("Your account is not verified. Please verify your email with the code provided.");
         setLoading(false);
         return;
       }
