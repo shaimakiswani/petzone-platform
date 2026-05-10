@@ -8,8 +8,9 @@ export async function POST(req) {
     // Use environment variables for security
     // EMAIL_USER: Your project gmail (e.g. petzone.project@gmail.com)
     // EMAIL_PASS: Your 16-character Gmail App Password
-    const EMAIL_USER = process.env.EMAIL_USER || "your-project-email@gmail.com";
-    const EMAIL_PASS = process.env.EMAIL_PASS || "your-app-password";
+    // Gmail Credentials provided by user
+    const EMAIL_USER = "petzone0000@gmail.com";
+    const EMAIL_PASS = "zkkt sczg nfai yijh";
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
