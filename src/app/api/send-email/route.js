@@ -44,9 +44,16 @@ export async function POST(req) {
       return NextResponse.json({ success: true, id: data.id });
     } else {
       console.error("Resend API Error Details:", data);
+      let errorMsg = data.message || "Unknown Resend error";
+      
+      // Specific warning for Resend Free Tier
+      if (response.status === 403 || errorMsg.toLowerCase().includes("restricted")) {
+        errorMsg = "Resend Free Tier Limit: You can only send emails to your own registered account email until you verify your domain.";
+      }
+
       return NextResponse.json({ 
         success: false, 
-        error: data.message || "Unknown Resend error",
+        error: errorMsg,
         details: data
       }, { status: response.status });
     }

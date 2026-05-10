@@ -152,8 +152,8 @@ function VerifyContent() {
           </button>
         </form>
         
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-400 mb-2">Didn't receive the code?</p>
+        <div className="mt-8 text-center space-y-4">
+          <p className="text-sm text-gray-400 mb-1">Didn't receive the code?</p>
           <button 
             disabled={resending}
             onClick={handleResend}
@@ -162,6 +162,15 @@ function VerifyContent() {
             {resending ? <RefreshCw className="animate-spin" size={16} /> : <RefreshCw size={16} />}
             Resend Verification Code
           </button>
+          
+          <div className="pt-4 border-t border-gray-50">
+            <button 
+              onClick={() => router.push("/register")}
+              className="text-gray-400 text-xs hover:text-brand-500 transition underline decoration-dotted"
+            >
+              Wrong email? Back to registration
+            </button>
+          </div>
         </div>
       </div>
     </div>
