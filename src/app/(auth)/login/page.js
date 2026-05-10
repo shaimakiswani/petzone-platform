@@ -62,16 +62,22 @@ export default function LoginPage() {
 
   const handleForgotPassword = async () => {
     if (!email) {
-      setError("Please enter your email address first.");
+      setError("Please enter your email address in the field above first.");
       return;
     }
     try {
       setLoading(true);
-      await sendPasswordResetEmail(auth, email);
-      setMessage("Password reset email sent! Check your inbox.");
       setError("");
+      setMessage("");
+      await sendPasswordResetEmail(auth, email);
+      setMessage("✅ Success! A password reset link has been sent to your email. Please check your inbox (and spam folder).");
     } catch (err) {
-      setError("Failed to send reset email. Make sure the email is correct.");
+      console.error(err);
+      if (err.code === "auth/user-not-found") {
+        setError("No account found with this email address.");
+      } else {
+        setError("Could not send reset email. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }
