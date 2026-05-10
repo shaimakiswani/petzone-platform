@@ -43,8 +43,13 @@ function VerifyContent() {
 
       const userDoc = querySnapshot.docs[0];
       const userData = userDoc.data();
+      
+      const storedCode = String(userData.verificationCode).trim();
+      const enteredCode = String(otp).trim();
 
-      if (userData.verificationCode === otp) {
+      console.log("DEBUG: Stored =", storedCode, "Entered =", enteredCode);
+
+      if (storedCode === enteredCode) {
         // Success! Update status
         await updateDoc(doc(db, "users", userDoc.id), {
           isVerified: true,
@@ -55,7 +60,7 @@ function VerifyContent() {
         setError("Invalid verification code. Please try again.");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Verification error:", err);
       setError("An error occurred during verification.");
     } finally {
       setLoading(false);
