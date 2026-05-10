@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, AlertCircle, CheckCircle, RefreshCw } from "lucide-react";
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import { db } from "@/firebase/config";
 
 function VerifyContent() {
@@ -31,27 +31,39 @@ function VerifyContent() {
     setError("");
 
     try {
-      // Find the pending user in Firestore
-      const q = query(collection(db, "users"), where("email", "==", email), where("isVerified", "==", false));
+      // Find all unverified documents for this email
+      const q = query(
+        collection(db, "users"), 
+        where("email", "==", email.trim())
+      );
       const querySnapshot = await getDocs(q);
-
+      
       if (querySnapshot.empty) {
-        setError("Account not found or already verified.");
+        setError("Account not found. Please register again.");
         setLoading(false);
         return;
       }
 
-      const userDoc = querySnapshot.docs[0];
-      const userData = userDoc.data();
+      // Sort in JS to find the newest one (even if it's already verified)
+      const docs = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      docs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       
-      const storedCode = String(userData.verificationCode).trim();
+      const latestUser = docs[0];
+
+      if (latestUser.isVerified) {
+        setSuccess(true);
+        setLoading(false);
+        return;
+      }
+
+      const storedCode = String(latestUser.verificationCode).trim();
       const enteredCode = String(otp).trim();
 
       console.log("DEBUG: Stored =", storedCode, "Entered =", enteredCode);
 
       if (storedCode === enteredCode) {
         // Success! Update status
-        await updateDoc(doc(db, "users", userDoc.id), {
+        await updateDoc(doc(db, "users", latestUser.id), {
           isVerified: true,
           verificationCode: null
         });
