@@ -16,6 +16,9 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const router = require("next/navigation").useRouter();
+  const pathname = require("next/navigation").usePathname();
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
@@ -24,13 +27,26 @@ export function AuthProvider({ children }) {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const profileData = docSnap.data();
+            
+            // 1. Check for Banned Status
             if (profileData.role === "banned") {
-               signOut(auth);
-               setUser(null);
-               alert("Access Denied: This account has been banned by an administrator for violations.");
-               return;
+                signOut(auth);
+                setUser(null);
+                alert("Access Denied: This account has been banned.");
+                return;
             }
-            setUser({ ...currentUser, ...profileData });
+
+            const updatedUser = { ...currentUser, ...profileData };
+            setUser(updatedUser);
+
+            // 2. Block Unverified Users (New Logic)
+            // Skip check for auth-related pages to avoid loops
+            const publicPages = ["/login", "/register", "/verify"];
+            const isPublicPage = publicPages.some(page => pathname?.startsWith(page));
+
+            if (profileData.password_enc && !profileData.isVerified && !isPublicPage) {
+              router.push(`/verify?email=${currentUser.email}`);
+            }
           } else {
             setUser(currentUser);
           }
@@ -44,7 +60,7 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [pathname, router]);
 
   const login = (email, password) => {
     return signInWithEmailAndPassword(auth, email, password);

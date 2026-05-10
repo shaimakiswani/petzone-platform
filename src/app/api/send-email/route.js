@@ -6,7 +6,8 @@ export async function POST(req) {
 
     // IMPORTANT: Replace 're_123456789' with your real Resend API Key
     // You can get it for free from https://resend.com
-    const RESEND_API_KEY = process.env.RESEND_API_KEY;
+    // Hardcoded key restored as per user request to ensure it works
+    const RESEND_API_KEY = "re_NkZ6We3j_LbN6ydrukPFXaDu2vTL4FYm4";
 
     if (!RESEND_API_KEY) {
       console.error("Missing RESEND_API_KEY environment variable");
