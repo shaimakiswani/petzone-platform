@@ -1,64 +1,61 @@
 import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 
 export async function POST(req) {
   try {
     const { email, otp, userName } = await req.json();
 
-    // IMPORTANT: Replace 're_123456789' with your real Resend API Key
-    // You can get it for free from https://resend.com
-    // Hardcoded key restored as per user request to ensure it works
-    const RESEND_API_KEY = "re_NkZ6We3j_LbN6ydrukPFXaDu2vTL4FYm4";
+    // Use environment variables for security
+    // EMAIL_USER: Your project gmail (e.g. petzone.project@gmail.com)
+    // EMAIL_PASS: Your 16-character Gmail App Password
+    const EMAIL_USER = process.env.EMAIL_USER || "your-project-email@gmail.com";
+    const EMAIL_PASS = process.env.EMAIL_PASS || "your-app-password";
 
-    if (!RESEND_API_KEY) {
-      console.error("Missing RESEND_API_KEY environment variable");
-      return NextResponse.json({ success: false, error: "Email service not configured" }, { status: 500 });
-    }
-
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: EMAIL_USER,
+        pass: EMAIL_PASS,
       },
-      body: JSON.stringify({
-        from: "PetZone <onboarding@resend.dev>",
-        to: [email],
-        subject: `Your Verification Code: ${otp} 🐾`,
-        html: `
-          <div style="font-family: sans-serif; text-align: center; padding: 40px; border: 2px solid #ec4899; border-radius: 30px; max-width: 500px; margin: 20px auto;">
-            <h1 style="color: #ec4899; margin-bottom: 10px;">PetZone</h1>
-            <p style="color: #666; font-size: 16px;">Use the code below to verify your account:</p>
-            <div style="background: #fdf2f8; padding: 30px; border-radius: 20px; margin: 30px 0;">
-              <span style="letter-spacing: 15px; font-size: 40px; font-weight: 900; color: #db2777; display: block; width: 100%;">${otp}</span>
-            </div>
-            <p style="color: #999; font-size: 12px;">This code is valid for 10 minutes.</p>
-          </div>
-        `,
-      }),
     });
 
-    const data = await response.json();
+    const mailOptions = {
+      from: `"PetZone Platform" <${EMAIL_USER}>`,
+      to: email,
+      subject: `Your Verification Code: ${otp} 🐾`,
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 40px; background-color: #fdf2f8; border-radius: 40px; max-width: 550px; margin: 20px auto; border: 1px solid #fbcfe8;">
+          <div style="background-color: white; padding: 40px; border-radius: 30px; shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+            <h1 style="color: #ec4899; margin-bottom: 5px; font-size: 32px;">PetZone</h1>
+            <p style="color: #6b7280; font-size: 16px; margin-bottom: 30px;">Your furry friends are waiting! 🐾</p>
+            
+            <p style="color: #374151; font-size: 18px; font-weight: 500;">Use the verification code below:</p>
+            
+            <div style="background: #fdf2f8; padding: 25px; border-radius: 20px; margin: 25px 0; border: 2px dashed #f472b6;">
+              <span style="letter-spacing: 12px; font-size: 48px; font-weight: 900; color: #db2777; display: block; width: 100%;">${otp}</span>
+            </div>
+            
+            <p style="color: #9ca3af; font-size: 13px; margin-top: 30px;">
+              This code is valid for 10 minutes. <br>
+              If you didn't request this, please ignore this email.
+            </p>
+          </div>
+          <p style="color: #f472b6; font-size: 11px; margin-top: 20px; font-weight: bold;">
+            &copy; 2026 PetZone Platform | Built with Love for Pets
+          </p>
+        </div>
+      `,
+    };
 
-    if (response.ok) {
-      console.log("Email sent successfully:", data.id);
-      return NextResponse.json({ success: true, id: data.id });
-    } else {
-      console.error("Resend API Error Details:", data);
-      let errorMsg = data.message || "Unknown Resend error";
-      
-      // Specific warning for Resend Free Tier
-      if (response.status === 403 || errorMsg.toLowerCase().includes("restricted")) {
-        errorMsg = "Resend Free Tier Limit: You can only send emails to your own registered account email until you verify your domain.";
-      }
+    await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully via Gmail");
+    return NextResponse.json({ success: true });
 
-      return NextResponse.json({ 
-        success: false, 
-        error: errorMsg,
-        details: data
-      }, { status: response.status });
-    }
   } catch (error) {
-    console.error("Critical API Error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error("Gmail SMTP Error:", error);
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message || "Failed to send email via Gmail" 
+    }, { status: 500 });
   }
 }
