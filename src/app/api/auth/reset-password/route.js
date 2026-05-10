@@ -9,9 +9,13 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
     }
 
-    // 1. Find user in Firestore
+    // 1. Find user in Firestore (get the latest one)
     const usersRef = adminDb.collection("users");
-    const snapshot = await usersRef.where("email", "==", email.trim()).get();
+    const snapshot = await usersRef
+      .where("email", "==", email.trim())
+      .orderBy("createdAt", "desc")
+      .limit(1)
+      .get();
 
     if (snapshot.empty) {
       return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
