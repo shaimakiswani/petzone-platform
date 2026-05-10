@@ -69,15 +69,25 @@ export default function LoginPage() {
       setLoading(true);
       setError("");
       setMessage("");
-      await sendPasswordResetEmail(auth, email);
-      setMessage("✅ Success! A password reset link has been sent to your email. Please check your inbox (and spam folder).");
+      
+      // Call our new OTP reset API
+      const res = await fetch("/api/auth/request-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+      
+      if (data.success) {
+        // Redirect to the reset-password page with email in query
+        router.push(`/reset-password?email=${email}`);
+      } else {
+        setError(data.error || "Failed to send reset code.");
+      }
     } catch (err) {
       console.error(err);
-      if (err.code === "auth/user-not-found") {
-        setError("No account found with this email address.");
-      } else {
-        setError("Could not send reset email. Please try again later.");
-      }
+      setError("Could not connect to the reset service. Please try again.");
     } finally {
       setLoading(false);
     }
