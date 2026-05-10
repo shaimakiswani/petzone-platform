@@ -14,11 +14,15 @@ const serviceAccount = {
   universe_domain: "googleapis.com"
 };
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://petzone-714af.firebaseio.com"
-  });
+if (!admin.apps.length && process.env.FIREBASE_PROJECT_ID) {
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}.firebaseio.com`
+    });
+  } catch (error) {
+    console.error("Firebase Admin initialization error:", error);
+  }
 }
 
 export const adminAuth = admin.auth();
