@@ -218,60 +218,61 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
             >
               {submitting ? "Submitting..." : "Submit Report"}
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Content Section */}
+          </d      {/* Content Section */}
       <div className="p-6 flex flex-col flex-1">
         {/* Header: Title */}
-        <div className={`flex justify-between items-start mb-3 gap-2 ${isAr ? 'flex-row-reverse text-right' : 'text-left'}`}>
-          <h3 className="text-xl font-extrabold text-gray-900 leading-tight truncate">{item.name}</h3>
+        <div className={`flex justify-between items-start mb-2 gap-2 ${isAr ? 'flex-row-reverse text-right' : 'text-left'}`}>
+          <h3 className="text-xl font-black text-gray-900 leading-tight truncate group-hover:text-brand-500 transition-colors">{item.name}</h3>
         </div>
 
+        {/* Seller Info Link */}
+        {item.userId && (
+          <Link 
+            href={`/user/${item.userId}`}
+            className={`flex items-center gap-1.5 text-[10px] font-bold text-gray-400 hover:text-brand-500 transition-colors mb-4 w-fit ${isAr ? 'flex-row-reverse' : ''}`}
+          >
+            <User size={12} className="text-brand-400" />
+            <span>{isAr ? 'البائع: ' : 'Seller: '}</span>
+            <span className="text-gray-600 underline decoration-brand-200 underline-offset-2">{item.userDisplayName || (isAr ? 'مستخدم' : 'User')}</span>
+          </Link>
+        )}
+
         {/* Dynamic Stickers area */}
-        <div className={`flex flex-wrap gap-2 mb-5 ${isAr ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex flex-wrap gap-2 mb-6 ${isAr ? 'flex-row-reverse' : ''}`}>
            {type === 'pets' && (
               <>
-                <span className={`bg-slate-50 text-slate-600 px-2 py-1 rounded-lg text-[10px] font-bold border border-slate-100 flex items-center gap-1 ${isAr ? 'flex-row-reverse' : ''}`}>
+                <span className={`bg-slate-50 text-slate-600 px-2.5 py-1.5 rounded-xl text-[10px] font-black border border-slate-100 flex items-center gap-1.5 shadow-sm ${isAr ? 'flex-row-reverse' : ''}`}>
                    {item.type === 'Dog' ? '🐶' : item.type === 'Cat' ? '🐱' : '🐾'} {t(`categories.${item.type?.toLowerCase() || 'other'}`)}
                 </span>
-                <span className="bg-slate-50 text-slate-600 px-2 py-1 rounded-lg text-[10px] font-bold border border-slate-100">{item.breed}</span>
-                <span className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold border ${isAr ? 'flex-row-reverse' : ''} ${item.gender === 'Male' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-pink-50 text-pink-600 border-pink-100'}`}>
-                   {item.gender === 'Male' ? <Mars size={10} /> : <Venus size={10} />}
-                   {item.gender === 'Male' ? t('forms.pet.genders.male') : t('forms.pet.genders.female')}
-                </span>
+                <span className="bg-slate-50 text-slate-600 px-2.5 py-1.5 rounded-xl text-[10px] font-black border border-slate-100 shadow-sm">{item.breed}</span>
               </>
            )}
            {type === 'clinics' && (
               <>
-                <div className={`flex items-center text-xs text-yellow-500 font-black bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-100 ${isAr ? 'flex-row-reverse' : ''}`}>
-                   <Star size={12} className={`fill-current ${isAr ? 'ml-1' : 'mr-1'}`} />
+                <div className={`flex items-center text-xs text-yellow-600 font-black bg-yellow-50 px-2.5 py-1.5 rounded-xl border border-yellow-100 shadow-sm ${isAr ? 'flex-row-reverse' : ''}`}>
+                   <Star size={12} className={`fill-current ${isAr ? 'ml-1.5' : 'mr-1.5'}`} />
                    {item.rating || "4.8"}
                 </div>
-                <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-[10px] font-bold border border-blue-100">{t('common.verified')}</span>
+                <span className="bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-xl text-[10px] font-black border border-blue-100 shadow-sm">{t('common.verified')}</span>
               </>
            )}
-           {type === 'supplies' && !item.category && (
-              <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded-lg text-[10px] font-bold border border-orange-100 uppercase tracking-widest">{t('common.premium')}</span>
-           )}
-           {type === 'hostels' && (
-              <span className={`bg-purple-50 text-purple-600 px-2 py-1 rounded-lg text-[10px] font-bold border border-purple-100 uppercase tracking-widest flex items-center gap-1 ${isAr ? 'flex-row-reverse' : ''}`}>
-                <ShieldCheck size={12} /> {t('common.safe')}
+           {type === 'supplies' && (
+              <span className="bg-brand-50 text-brand-600 px-2.5 py-1.5 rounded-xl text-[10px] font-black border border-brand-100 shadow-sm uppercase tracking-wider">
+                {t(`categories.${item.category?.toLowerCase() || 'other'}`)}
               </span>
            )}
         </div>
 
-        {/* Location & Contact area (Smaller, dim) */}
-         <div className="mt-auto space-y-4">
-            <div className={`flex flex-col sm:flex-row sm:items-center gap-4 text-gray-400 text-xs ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-               <div className={`flex items-center gap-1 min-w-0 ${isAr ? 'flex-row-reverse' : ''}`}>
-                 <MapPin size={14} className="shrink-0" />
+        {/* Location & Contact area */}
+         <div className="mt-auto space-y-5">
+            <div className={`flex items-center justify-between gap-4 text-gray-400 text-[11px] font-bold ${isAr ? 'flex-row-reverse text-right' : ''}`}>
+               <div className={`flex items-center gap-1.5 min-w-0 ${isAr ? 'flex-row-reverse' : ''}`}>
+                 <MapPin size={14} className="text-brand-400 shrink-0" />
                  <span className="truncate">{item.location || (isAr ? "أونلاين" : "Online")}</span>
                </div>
                {item.phone && (
-                 <div className="flex items-center gap-1 shrink-0 bg-brand-50/50 px-2 py-0.5 rounded-md font-black text-brand-700 border border-brand-100/30">
-                    <Phone size={12} /> {item.phone}
+                 <div className="flex items-center gap-1.5 shrink-0 bg-brand-50/80 px-2.5 py-1 rounded-lg text-brand-700 border border-brand-100/50">
+                    <Phone size={12} /> <span className="tabular-nums tracking-tight">{item.phone}</span>
                  </div>
                )}
             </div>
@@ -280,18 +281,21 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
             <div className={`grid grid-cols-2 gap-3 ${isAr ? 'rtl' : 'ltr'}`}>
                <Link 
                  href={`/${type}/${item.id}`} 
-                 className="flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-600 font-extrabold py-3 rounded-2xl transition duration-300 text-xs tracking-tight border border-gray-100 shadow-sm"
+                 className="flex items-center justify-center bg-white hover:bg-gray-50 text-gray-900 font-black py-3.5 rounded-2xl transition-all duration-300 text-xs tracking-tight border-2 border-gray-100 hover:border-brand-200 shadow-sm active:scale-95"
                >
                  {t('common.details')}
                </Link>
                <button 
                  onClick={handleMessage}
                  disabled={!item.userId}
-                 className={`flex items-center justify-center gap-2 bg-brand-500 text-white font-extrabold py-3 rounded-2xl hover:bg-brand-600 transition duration-300 shadow-lg shadow-brand-500/20 text-xs tracking-tight ${!item.userId ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
+                 className={`flex items-center justify-center gap-2 bg-brand-500 text-white font-black py-3.5 rounded-2xl hover:bg-brand-600 transition-all duration-300 shadow-lg shadow-brand-500/25 text-xs tracking-tight active:scale-95 ${!item.userId ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
                >
                  {t('common.message')}
                </button>
             </div>
+        </div>
+      </div>
+          </div>
         </div>
       </div>
     </div>
