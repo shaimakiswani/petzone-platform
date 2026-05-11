@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
 
 export async function POST(req) {
   try {
@@ -10,6 +10,8 @@ export async function POST(req) {
     }
 
     // 1. Find user in Firestore (get the latest one)
+    const adminDb = getAdminDb();
+    const adminAuth = getAdminAuth();
     const usersRef = adminDb.collection("users");
     const snapshot = await usersRef
       .where("email", "==", email.trim())

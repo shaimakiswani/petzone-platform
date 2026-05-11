@@ -14,16 +14,37 @@ const serviceAccount = {
   universe_domain: "googleapis.com"
 };
 
-if (!admin.apps.length && process.env.FIREBASE_PROJECT_ID) {
-  try {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}.firebaseio.com`
-    });
-  } catch (error) {
-    console.error("Firebase Admin initialization error:", error);
+const getAdminApp = () => {
+  if (!admin.apps.length) {
+    if (process.env.FIREBASE_PROJECT_ID) {
+      try {
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount),
+          databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}.firebaseio.com`
+        });
+      } catch (error) {
+        console.error("Firebase Admin initialization error:", error);
+      }
+    } else {
+      // Return a dummy or null during build if env vars are missing
+      return null;
+    }
   }
-}
+  return admin.apps[0];
+};
 
-export const adminAuth = admin.auth();
-export const adminDb = admin.firestore();
+export const adminAuth = {
+  collection: (...args) => getAdminApp() ? admin.auth(...args) : null,
+  // We can also just use a proxy or a simpler approach
+};
+
+// Safer approach for Next.js build:
+export const getAdminDb = () => {
+  getAdminApp();
+  return admin.firestore();
+};
+
+export const getAdminAuth = () => {
+  getAdminApp();
+  return admin.auth();
+};

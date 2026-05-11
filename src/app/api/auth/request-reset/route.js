@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { getAdminDb } from "@/lib/firebase-admin";
 import nodemailer from "nodemailer";
 
 export async function POST(req) {
@@ -11,6 +11,7 @@ export async function POST(req) {
     }
 
     // 1. Check if user exists in Firestore (get the latest one)
+    const adminDb = getAdminDb();
     const usersRef = adminDb.collection("users");
     const snapshot = await usersRef
       .where("email", "==", email.trim())
