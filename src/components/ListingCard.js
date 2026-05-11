@@ -229,11 +229,20 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
         {item.userId && (
           <Link 
             href={`/user/${item.userId}`}
-            className={`flex items-center gap-1.5 text-[10px] font-bold text-gray-400 hover:text-brand-500 transition-colors mb-4 w-fit ${isAr ? 'flex-row-reverse' : ''}`}
+            className={`flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl hover:bg-brand-50 transition-colors mb-4 w-full border border-slate-100 ${isAr ? 'flex-row-reverse text-right' : ''}`}
           >
-            <User size={12} className="text-brand-400" />
-            <span>{isAr ? 'البائع: ' : 'Seller: '}</span>
-            <span className="text-gray-600 underline decoration-brand-200 underline-offset-2">{item.userDisplayName || (isAr ? 'مستخدم' : 'User')}</span>
+            <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-brand-500">
+              <User size={16} />
+            </div>
+            <div className="flex-1">
+              <p className="text-[9px] font-black text-gray-400 uppercase leading-none mb-0.5">{isAr ? 'صاحب الإعلان' : 'ADVERTISER'}</p>
+              <p className="text-xs font-black text-gray-700 underline decoration-brand-200 underline-offset-2 truncate">
+                {item.userDisplayName || (isAr ? 'مستخدم بيت زون' : 'PetZone User')}
+              </p>
+            </div>
+            <div className="text-brand-500 font-black text-[10px]">
+              {isAr ? 'الملف ←' : 'Profile →'}
+            </div>
           </Link>
         )}
 
@@ -292,10 +301,6 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
                >
                  {t('common.message')}
                </button>
-            </div>
-        </div>
-      </div>
-          </div>
         </div>
       </div>
     </div>
