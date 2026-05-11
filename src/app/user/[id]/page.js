@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
+import { useRouter } from "next/navigation";
 import { 
   collection, 
   query, 
@@ -11,12 +12,13 @@ import {
 } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import ListingCard from "@/components/ListingCard";
-import { User, Package, Calendar, Star, ShieldCheck, MapPin } from "lucide-react";
+import { User, Package, Calendar, Star, ShieldCheck, MapPin, ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function PublicProfilePage({ params }) {
   const unwrappedParams = use(params);
   const userId = unwrappedParams.id;
+  const router = useRouter();
   const { t, isAr } = useLanguage();
   
   const [seller, setSeller] = useState(null);
@@ -63,6 +65,17 @@ export default function PublicProfilePage({ params }) {
 
   return (
     <div className={`max-w-6xl mx-auto py-12 px-4 ${isAr ? 'rtl' : 'ltr'}`}>
+      {/* Back Button */}
+      <button 
+        onClick={() => router.back()}
+        className={`flex items-center gap-2 mb-6 text-gray-500 hover:text-brand-500 transition-colors font-bold group ${isAr ? 'flex-row-reverse' : ''}`}
+      >
+        <div className={`w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center group-hover:bg-brand-50 group-hover:border-brand-100 transition-all ${isAr ? 'rotate-180' : ''}`}>
+          <ArrowLeft size={20} />
+        </div>
+        <span>{t('common.back')}</span>
+      </button>
+
       <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-2xl shadow-brand-100/20 border border-gray-100 mb-12 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-50 rounded-full -mr-32 -mt-32 opacity-50 blur-3xl"></div>
         
