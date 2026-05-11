@@ -1,4 +1,4 @@
-import { Heart, MapPin, Mars, Venus, Star, Package, ShieldCheck, Home, AlertTriangle, X, Phone } from "lucide-react";
+import { Heart, MapPin, Mars, Venus, Star, Package, ShieldCheck, Home, AlertTriangle, X, Phone, User } from "lucide-react";
 import Link from "next/link";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useAuth } from "@/context/AuthContext";
@@ -218,7 +218,11 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
             >
               {submitting ? "Submitting..." : "Submit Report"}
             </button>
-          </d      {/* Content Section */}
+          </div>
+        </div>
+      )}
+
+      {/* Content Section */}
       <div className="p-6 flex flex-col flex-1">
         {/* Header: Title */}
         <div className={`flex justify-between items-start mb-2 gap-2 ${isAr ? 'flex-row-reverse text-right' : 'text-left'}`}>
