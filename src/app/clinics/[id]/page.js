@@ -18,6 +18,7 @@ import CopyPhoneButton from "@/components/CopyPhoneButton";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
+import TranslateButton from "@/components/TranslateButton";
 
 export default function ClinicDetails({ params }) {
   const unwrappedParams = use(params);
@@ -154,7 +155,8 @@ export default function ClinicDetails({ params }) {
           
           <div className="mb-8 flex-1 text-sm bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
             <h2 className="text-lg font-bold text-gray-900 mb-2">{t('details.expertise')}</h2>
-            <p className="text-gray-600 leading-relaxed">{clinic.description || t('details.no_desc')}</p>
+            <p className="text-gray-600 leading-relaxed mb-2">{clinic.description || t('details.no_desc')}</p>
+            <TranslateButton text={clinic.description} />
           </div>
           
           <div className="bg-gray-50 p-6 rounded-3xl mt-auto shadow-inner">

@@ -16,7 +16,8 @@ export const translations = {
       messages: "Messages",
       notifications: "Notifications",
       settings: "Settings",
-      sign_out: "Sign Out"
+      sign_out: "Sign Out",
+      requests: "Requests"
     },
     
     // Settings
@@ -145,7 +146,10 @@ export const translations = {
       free: "Free",
       no_image: "No Image Provided",
       login_contact: "You must be logged in to view contact details.",
-      btn_login: "Login to Contact"
+      btn_login: "Login to Contact",
+      translate: "Translate",
+      view_original: "View Original",
+      translating: "Translating..."
     },
     
     // Forms
@@ -361,7 +365,8 @@ export const translations = {
       messages: "الرسائل",
       notifications: "الإشعارات",
       settings: "الإعدادات",
-      sign_out: "تسجيل الخروج"
+      sign_out: "تسجيل الخروج",
+      requests: "الطلبات"
     },
     
     // Settings
@@ -490,7 +495,10 @@ export const translations = {
       free: "مجاناً",
       no_image: "لا توجد صورة متوفرة",
       login_contact: "يجب تسجيل الدخول لرؤية تفاصيل التواصل.",
-      btn_login: "سجل دخول للتواصل"
+      btn_login: "سجل دخول للتواصل",
+      translate: "ترجم الوصف",
+      view_original: "عرض الأصل",
+      translating: "جاري الترجمة..."
     },
 
     // Forms

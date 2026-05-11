@@ -120,6 +120,13 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
           alt={item.name} 
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
+        {item.status === 'sold' && (
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-20 flex items-center justify-center p-4">
+            <div className="bg-white/90 text-brand-600 px-4 py-2 rounded-xl font-black text-sm rotate-[-10deg] shadow-2xl border-2 border-brand-500 scale-125">
+              {isAr ? (type === 'pets' ? "تم التبني" : "تم البيع") : (type === 'pets' ? "ADOPTED" : "SOLD")}
+            </div>
+          </div>
+        )}
         <div className={`absolute top-4 ${isAr ? 'left-4' : 'right-4'} flex flex-col gap-2 z-20`}>
           <button 
             onClick={(e) => {

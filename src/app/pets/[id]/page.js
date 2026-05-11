@@ -16,8 +16,7 @@ import { db } from "@/firebase/config";
 import { useAuth } from "@/context/AuthContext";
 import { MapPin, Phone, ArrowLeft, Heart, CheckCircle2, Mars, Venus } from "lucide-react";
 import { useFavorites } from "@/context/FavoritesContext";
-import CopyPhoneButton from "@/components/CopyPhoneButton";
-import { useLanguage } from "@/context/LanguageContext";
+import TranslateButton from "@/components/TranslateButton";
 
 export default function PetDetailsPage({ params }) {
   const unwrappedParams = use(params);
@@ -28,6 +27,49 @@ export default function PetDetailsPage({ params }) {
   
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [requesting, setRequesting] = useState(false);
+  const [hasRequested, setHasRequested] = useState(false);
+
+  useEffect(() => {
+    async function checkRequestStatus() {
+      if (user && unwrappedParams.id) {
+        const q = query(
+          collection(db, "requests"), 
+          where("itemId", "==", unwrappedParams.id),
+          where("buyerId", "==", user.uid)
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) setHasRequested(true);
+      }
+    }
+    checkRequestStatus();
+  }, [user, unwrappedParams.id]);
+
+  const handleRequest = async () => {
+    if (!user) return router.push("/login");
+    if (user.uid === pet.userId) return alert("This is your own listing!");
+    
+    setRequesting(true);
+    try {
+      await addDoc(collection(db, "requests"), {
+        itemId: pet.id,
+        itemType: "pet",
+        itemName: pet.name,
+        itemImage: pet.image,
+        buyerId: user.uid,
+        buyerName: user.displayName || "Interested User",
+        sellerId: pet.userId,
+        status: "pending",
+        createdAt: serverTimestamp(),
+      });
+      setHasRequested(true);
+      alert(isAr ? "تم إرسال طلبك بنجاح!" : "Request sent successfully!");
+    } catch (err) {
+      alert("Error sending request.");
+    } finally {
+      setRequesting(false);
+    }
+  };
 
   const handleMessage = async () => {
     if (!user) {
@@ -94,11 +136,19 @@ export default function PetDetailsPage({ params }) {
   }
 
   const favorited = isFavorite(pet.id);
+  const isSold = pet.status === "sold";
 
   return (
     <div className={`max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden ${isAr ? 'rtl' : 'ltr'}`}>
       {/* Image Gallery Section */}
       <div className="bg-slate-100 relative group min-h-[300px] md:min-h-[500px]">
+        {isSold && (
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-20 flex items-center justify-center">
+            <span className="bg-white text-brand-600 px-8 py-3 rounded-2xl font-black text-2xl rotate-[-5deg] shadow-2xl border-4 border-brand-500">
+              {isAr ? "تم التبني / مباع" : "ADOPTED / SOLD"}
+            </span>
+          </div>
+        )}
         <button 
           onClick={() => router.back()}
           className={`absolute top-4 ${isAr ? 'right-4' : 'left-4'} p-2 bg-white/80 rounded-full hover:bg-white text-gray-600 transition backdrop-blur-sm z-10 shadow-md`}
@@ -182,9 +232,10 @@ export default function PetDetailsPage({ params }) {
         <div className="grid md:grid-cols-3 gap-8">
           <div className={`md:col-span-2 ${isAr ? 'text-right' : 'text-left'}`}>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('details.about')}</h2>
-            <p className="text-gray-600 text-lg leading-relaxed whitespace-pre-wrap mb-8">
+            <p className="text-gray-600 text-lg leading-relaxed whitespace-pre-wrap mb-2">
               {pet.description || t('details.no_desc')}
             </p>
+            <TranslateButton text={pet.description} className="mb-8" />
 
             <h2 className={`text-xl font-bold text-gray-900 mb-4 ${isAr ? 'text-right' : 'text-left'}`}>{t('details.traits')}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
@@ -217,13 +268,35 @@ export default function PetDetailsPage({ params }) {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <CopyPhoneButton phone={pet.phone} />
                   <button 
-                    onClick={handleMessage}
-                    className="w-full bg-white border-2 border-brand-500 text-brand-500 font-bold py-3 rounded-xl hover:bg-brand-50 transition shadow-sm"
+                    onClick={handleRequest}
+                    disabled={isSold || hasRequested || requesting}
+                    className={`w-full font-black py-4 rounded-xl transition shadow-lg flex items-center justify-center gap-2 ${
+                      isSold ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none" :
+                      hasRequested ? "bg-emerald-50 text-emerald-600 border-2 border-emerald-500 cursor-default shadow-none" :
+                      "bg-brand-500 text-white hover:bg-brand-600 shadow-brand-500/30"
+                    }`}
                   >
-                    {t('details.msg_owner')}
+                    {isSold ? (isAr ? "تم التبني" : "Adopted") : 
+                     hasRequested ? (
+                       <>
+                         <CheckCircle2 size={20} />
+                         {isAr ? "تم إرسال الطلب" : "Request Sent"}
+                       </>
+                     ) : 
+                     requesting ? (isAr ? "جاري الإرسال..." : "Sending...") :
+                     (isAr ? "طلب تبني الآن" : "Request Adoption Now")}
                   </button>
+
+                  <div className="pt-4 border-t border-gray-200 space-y-3">
+                    <CopyPhoneButton phone={pet.phone} />
+                    <button 
+                      onClick={handleMessage}
+                      className="w-full bg-white border-2 border-brand-500 text-brand-500 font-bold py-3 rounded-xl hover:bg-brand-50 transition shadow-sm"
+                    >
+                      {t('details.msg_owner')}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

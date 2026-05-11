@@ -21,8 +21,9 @@ function ProfileContent() {
   
   const [myAds, setMyAds] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [loadingAds, setLoadingAds] = useState(true);
-  const [activeTab, setActiveTab] = useState(queryTab || "ads"); // ads, messages, settings, notifications
+  const [activeTab, setActiveTab] = useState(queryTab || "ads"); // ads, messages, settings, notifications, requests
   const [displayName, setDisplayName] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -33,7 +34,80 @@ function ProfileContent() {
 
   useEffect(() => {
     if (!user) return;
-    // Fetch notifications (sorting on client-side to avoid index error)
+    
+    // Listen for requests (Both incoming and outgoing)
+    const qRequests = query(
+      collection(db, "requests"),
+      where("participants", "array-contains", user.uid)
+    );
+    
+    // Note: To avoid complex participants logic if not already implemented, 
+    // I'll fetch by buyerId OR sellerId using two queries or a unified field.
+    // I'll use a unified field "participantIds" = [buyerId, sellerId]
+    const q = query(collection(db, "requests"), where("sellerId", "==", user.uid));
+    const q2 = query(collection(db, "requests"), where("buyerId", "==", user.uid));
+
+    const unsub1 = onSnapshot(q, (snap) => {
+      const incoming = snap.docs.map(doc => ({ id: doc.id, ...doc.data(), isIncoming: true }));
+      setRequests(prev => {
+        const other = prev.filter(r => !r.isIncoming);
+        return [...other, ...incoming].sort((a,b) => b.createdAt?.toDate() - a.createdAt?.toDate());
+      });
+    });
+
+    const unsub2 = onSnapshot(q2, (snap) => {
+      const outgoing = snap.docs.map(doc => ({ id: doc.id, ...doc.data(), isIncoming: false }));
+      setRequests(prev => {
+        const other = prev.filter(r => r.isIncoming);
+        return [...other, ...outgoing].sort((a,b) => b.createdAt?.toDate() - a.createdAt?.toDate());
+      });
+    });
+
+    return () => { unsub1(); unsub2(); };
+  }, [user]);
+
+  const handleAcceptRequest = async (request) => {
+    try {
+      setUpdating(true);
+      // 1. Update request status
+      await updateDoc(doc(db, "requests", request.id), { status: "accepted" });
+      
+      // 2. Update item status to 'sold'
+      const collectionName = request.itemType === "pet" ? "pets" : "supplies";
+      await updateDoc(doc(db, collectionName, request.itemId), { status: "sold" });
+      
+      // 3. Notify buyer
+      await addDoc(collection(db, "notifications"), {
+        userId: request.buyerId,
+        message: isAr 
+          ? `تهانينا! تم قبول طلبك لـ ${request.itemName}.` 
+          : `Congratulations! Your request for ${request.itemName} has been accepted.`,
+        type: "request_accepted",
+        isRead: false,
+        createdAt: serverTimestamp()
+      });
+
+      alert(isAr ? "تم قبول الطلب وتحديث حالة الإعلان!" : "Request accepted and item status updated!");
+    } catch (err) {
+      console.error(err);
+      alert("Error accepting request.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    if (!confirm(isAr ? "هل أنت متأكد من رفض هذا الطلب؟" : "Are you sure you want to reject this request?")) return;
+    try {
+      await updateDoc(doc(db, "requests", requestId), { status: "rejected" });
+    } catch (err) {
+      alert("Error rejecting request.");
+    }
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    // Fetch notifications
     const q = query(collection(db, "notifications"), where("userId", "==", user.uid));
     const unsubscribe = onSnapshot(q, (snap) => {
       const notifs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -208,6 +282,17 @@ function ProfileContent() {
             <Package size={20} /> {t('profile_tabs.my_ads')}
           </button>
           <button 
+            onClick={() => setActiveTab("requests")}
+            className={`flex items-center gap-3 w-full p-3 ${isAr ? 'flex-row-reverse text-right' : 'text-left'} rounded-xl font-medium transition ${activeTab === 'requests' ? 'bg-brand-50 text-brand-600' : 'hover:bg-gray-50 text-gray-700'}`}
+          >
+            <Check size={20} /> {t('profile_tabs.requests')}
+            {requests.filter(r => r.isIncoming && r.status === 'pending').length > 0 && (
+              <span className="bg-brand-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-auto">
+                {requests.filter(r => r.isIncoming && r.status === 'pending').length}
+              </span>
+            )}
+          </button>
+          <button 
             onClick={() => setActiveTab("messages")}
             className={`flex items-center gap-3 w-full p-3 ${isAr ? 'flex-row-reverse text-right' : 'text-left'} rounded-xl font-medium transition ${activeTab === 'messages' ? 'bg-brand-50 text-brand-600' : 'hover:bg-gray-50 text-gray-700'}`}
           >
@@ -296,6 +381,104 @@ function ProfileContent() {
                 ))}
               </div>
             )}
+          </div>
+        ) : activeTab === "requests" ? (
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+               <Check className="text-brand-500" /> {t('profile_tabs.requests')}
+             </h2>
+             
+             <div className="space-y-8">
+               {/* Incoming Requests Section */}
+               <div>
+                 <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                   <Bell size={14} /> {isAr ? 'الطلبات الواردة' : 'Incoming Requests'}
+                 </h3>
+                 <div className="space-y-4">
+                   {requests.filter(r => r.isIncoming).length === 0 ? (
+                     <p className="text-gray-400 text-sm italic py-4">{isAr ? 'لا توجد طلبات واردة حالياً.' : 'No incoming requests yet.'}</p>
+                   ) : requests.filter(r => r.isIncoming).map(req => (
+                     <div key={req.id} className="bg-gray-50/50 border border-gray-100 p-4 rounded-2xl flex items-center gap-4 transition-all hover:shadow-md">
+                       <img src={req.itemImage} className="w-16 h-16 rounded-xl object-cover shadow-sm" />
+                       <div className="flex-1 min-w-0">
+                         <h4 className="font-bold text-gray-900 truncate">{req.itemName}</h4>
+                         <p className="text-xs text-gray-500 font-medium">
+                           {isAr ? 'من: ' : 'From: '} <span className="text-brand-600 font-black">{req.buyerName}</span>
+                         </p>
+                         <p className="text-[10px] text-gray-400 mt-1 uppercase">
+                           {req.createdAt?.toDate ? req.createdAt.toDate().toLocaleDateString() : 'Just now'}
+                         </p>
+                       </div>
+                       <div className="flex flex-col gap-2 items-end">
+                         {req.status === 'pending' ? (
+                           <div className="flex gap-2">
+                             <button 
+                               onClick={() => handleRejectRequest(req.id)}
+                               className="px-3 py-1.5 bg-white border border-red-100 text-red-500 text-xs font-bold rounded-lg hover:bg-red-50 transition"
+                             >
+                               {isAr ? 'رفض' : 'Reject'}
+                             </button>
+                             <button 
+                               onClick={() => handleAcceptRequest(req)}
+                               className="px-3 py-1.5 bg-brand-500 text-white text-xs font-bold rounded-lg hover:bg-brand-600 transition shadow-sm"
+                             >
+                               {isAr ? 'قبول' : 'Accept'}
+                             </button>
+                           </div>
+                         ) : (
+                           <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                             req.status === 'accepted' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                           }`}>
+                             {isAr ? (req.status === 'accepted' ? 'مقبول' : 'مرفوض') : req.status}
+                           </span>
+                         )}
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+
+               {/* Outgoing Requests Section */}
+               <div>
+                 <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                   <Package size={14} /> {isAr ? 'طلباتي المرسلة' : 'My Sent Requests'}
+                 </h3>
+                 <div className="space-y-4">
+                   {requests.filter(r => !r.isIncoming).length === 0 ? (
+                     <p className="text-gray-400 text-sm italic py-4">{isAr ? 'لم ترسل أي طلبات بعد.' : 'You haven\'t sent any requests yet.'}</p>
+                   ) : requests.filter(r => !r.isIncoming).map(req => (
+                     <div key={req.id} className="bg-white border border-gray-100 p-4 rounded-2xl flex items-center gap-4 shadow-sm">
+                       <img src={req.itemImage} className="w-16 h-16 rounded-xl object-cover" />
+                       <div className="flex-1">
+                         <h4 className="font-bold text-gray-900 truncate">{req.itemName}</h4>
+                         <div className="flex items-center gap-2 mt-1">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                              req.status === 'pending' ? 'bg-amber-100 text-amber-600' :
+                              req.status === 'accepted' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                            }`}>
+                              {isAr ? (
+                                req.status === 'pending' ? 'بانتظار الرد' :
+                                req.status === 'accepted' ? 'تم القبول' : 'مرفوض'
+                              ) : req.status}
+                            </span>
+                         </div>
+                       </div>
+                       <div className="text-right">
+                          <p className="text-[10px] text-gray-400 font-bold">
+                            {req.createdAt?.toDate ? req.createdAt.toDate().toLocaleDateString() : 'Just now'}
+                          </p>
+                          <button 
+                            onClick={() => router.push(`/${req.itemType === 'pet' ? 'pets' : 'supplies'}/${req.itemId}`)}
+                            className="text-[10px] text-brand-500 font-black hover:underline mt-1"
+                          >
+                            {isAr ? 'عرض الإعلان' : 'View Ad'}
+                          </button>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             </div>
           </div>
         ) : activeTab === "messages" ? (
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 overflow-hidden">

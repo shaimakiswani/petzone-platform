@@ -18,6 +18,7 @@ import CopyPhoneButton from "@/components/CopyPhoneButton";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
+import TranslateButton from "@/components/TranslateButton";
 
 export default function HostelDetails({ params }) {
   const unwrappedParams = use(params);
@@ -157,7 +158,8 @@ export default function HostelDetails({ params }) {
           
           <div className="mb-8 flex-1">
             <h2 className="text-xl font-bold text-gray-900 mb-4">{t('details.description')}</h2>
-            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{hostel.description || t('details.no_desc')}</p>
+            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap mb-2">{hostel.description || t('details.no_desc')}</p>
+            <TranslateButton text={hostel.description} />
           </div>
           
           <div className="bg-gray-50 p-6 rounded-3xl mt-auto shadow-inner border border-gray-100">
@@ -170,7 +172,7 @@ export default function HostelDetails({ params }) {
                 onClick={handleMessage}
                 className="w-full bg-white border-2 border-brand-500 text-brand-500 font-bold py-3 rounded-xl hover:bg-brand-50 transition shadow-sm"
               >
-                {t('details.message_owner')}
+                {t('details.msg_owner')}
               </button>
             </div>
           </div>
