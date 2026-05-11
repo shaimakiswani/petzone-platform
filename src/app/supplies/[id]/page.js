@@ -12,13 +12,12 @@ import {
   serverTimestamp 
 } from "firebase/firestore";
 import { db } from "@/firebase/config";
-import { ArrowLeft, Phone, Package, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Phone, Package, CheckCircle2, User, MapPin, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import CopyPhoneButton from "@/components/CopyPhoneButton";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
-
 import TranslateButton from "@/components/TranslateButton";
 
 export default function SupplyDetails({ params }) {
@@ -26,25 +25,54 @@ export default function SupplyDetails({ params }) {
   const router = useRouter();
   const { user } = useAuth();
   const { t, isAr } = useLanguage();
+  
   const [supply, setSupply] = useState(null);
+  const [sellerStats, setSellerStats] = useState({ sold: 0, total: 0 });
   const [loading, setLoading] = useState(true);
   const [requesting, setRequesting] = useState(false);
   const [hasRequested, setHasRequested] = useState(false);
 
   useEffect(() => {
-    async function checkRequestStatus() {
-      if (user && unwrappedParams.id) {
-        const q = query(
-          collection(db, "requests"), 
-          where("itemId", "==", unwrappedParams.id),
-          where("buyerId", "==", user.uid)
-        );
-        const snap = await getDocs(q);
-        if (!snap.empty) setHasRequested(true);
-      }
+    async function fetchData() {
+      try {
+        const docRef = doc(db, "supplies", unwrappedParams.id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = { id: docSnap.id, ...docSnap.data() };
+          setSupply(data);
+
+          // Fetch Seller Stats
+          const collections = ["pets", "supplies", "clinics", "hostels"];
+          let soldCount = 0;
+          let totalCount = 0;
+
+          await Promise.all(collections.map(async (col) => {
+            const q = query(collection(db, col), where("userId", "==", data.userId));
+            const snap = await getDocs(q);
+            totalCount += snap.size;
+            snap.docs.forEach(d => {
+              if (d.data().status === "sold") soldCount++;
+            });
+          }));
+          setSellerStats({ sold: soldCount, total: totalCount });
+
+          // Check if current user has requested
+          if (user) {
+            const qReq = query(
+              collection(db, "requests"), 
+              where("itemId", "==", unwrappedParams.id),
+              where("buyerId", "==", user.uid)
+            );
+            const snapReq = await getDocs(qReq);
+            if (!snapReq.empty) setHasRequested(true);
+          }
+        }
+      } catch (err) { console.error(err); } 
+      finally { setLoading(false); }
     }
-    checkRequestStatus();
-  }, [user, unwrappedParams.id]);
+    fetchData();
+  }, [unwrappedParams.id, user]);
 
   const handleRequest = async () => {
     if (!user) return router.push("/login");
@@ -65,20 +93,13 @@ export default function SupplyDetails({ params }) {
       });
       setHasRequested(true);
       alert(isAr ? "تم إرسال طلب الشراء بنجاح!" : "Purchase request sent successfully!");
-    } catch (err) {
-      alert("Error sending request.");
-    } finally {
-      setRequesting(false);
-    }
+    } catch (err) { alert("Error sending request."); } 
+    finally { setRequesting(false); }
   };
 
   const handleMessage = async () => {
-    if (!user) {
-      alert("Please login to message the owner.");
-      router.push("/login");
-      return;
-    }
-    if (user.uid === supply.userId) return alert("This is your own listing!");
+    if (!user) return router.push("/login");
+    if (user.uid === supply.userId) return;
 
     try {
       const q = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
@@ -88,15 +109,11 @@ export default function SupplyDetails({ params }) {
       if (existing) {
         router.push(`/profile?tab=messages&chatId=${existing.id}`);
       } else {
-        // Fetch real owner name
-        const ownerSnap = await getDoc(doc(db, "users", supply.userId));
-        const ownerName = ownerSnap.exists() ? ownerSnap.data().name : (supply.userDisplayName || "Seller");
-
         const docRef = await addDoc(collection(db, "chats"), {
           participants: [user.uid, supply.userId],
           participantNames: {
             [user.uid]: user.displayName || "User",
-            [supply.userId]: ownerName
+            [supply.userId]: supply.userDisplayName || "Seller"
           },
           lastMessage: "Started a conversation",
           updatedAt: serverTimestamp(),
@@ -108,138 +125,169 @@ export default function SupplyDetails({ params }) {
     } catch (err) { alert("Error starting chat."); }
   };
 
-  useEffect(() => {
-    async function fetchSupply() {
-      try {
-        const docRef = doc(db, "supplies", unwrappedParams.id);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setSupply({ id: docSnap.id, ...docSnap.data() });
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchSupply();
-  }, [unwrappedParams.id]);
-
   if (loading) return <div className="text-center py-20 text-brand-500 font-bold">{t('common.loading')}</div>;
-  if (!supply) return <div className="text-center py-20 text-gray-500">Supply not found.</div>;
+  if (!supply) return <div className="text-center py-20 text-gray-500">Item not found.</div>;
 
   const isSold = supply.status === "sold";
 
   return (
-    <div className={`max-w-4xl mx-auto py-8 px-4 ${isAr ? 'rtl' : 'ltr'}`}>
-      <Link href="/supplies" className={`flex items-center text-gray-500 hover:text-brand-500 transition mb-6 w-fit ${isAr ? 'flex-row-reverse text-right' : ''}`}>
-        <ArrowLeft size={20} className={isAr ? 'ml-2 rotate-180' : 'mr-2'} /> {t('details.back_supplies')}
+    <div className={`max-w-6xl mx-auto py-8 px-4 ${isAr ? 'rtl' : 'ltr'}`}>
+      <Link href="/supplies" className={`flex items-center text-gray-400 hover:text-brand-500 transition-all mb-8 font-black group w-fit ${isAr ? 'flex-row-reverse' : ''}`}>
+        <div className={`w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-gray-100 group-hover:scale-110 transition-transform ${isAr ? 'ml-3' : 'mr-3'}`}>
+          <ArrowLeft size={18} className={isAr ? 'rotate-180' : ''} />
+        </div>
+        {t('details.back_supplies')}
       </Link>
       
-      <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-2xl shadow-brand-100/20 border border-gray-100 flex flex-col md:flex-row min-h-[500px]">
-        <div className="md:w-1/2 p-4 bg-slate-50 relative">
-          {isSold && (
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-l-[2rem]">
-              <span className="bg-white text-brand-600 px-8 py-3 rounded-2xl font-black text-2xl rotate-[-5deg] shadow-2xl border-4 border-brand-500">
-                {isAr ? "تم البيع" : "SOLD"}
-              </span>
-            </div>
-          )}
-          <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-3xl bg-white shadow-inner">
-            {supply.image ? (
-              <img 
-                src={supply.gallery && supply.gallery.length > 0 && supply.activeImage ? supply.activeImage : supply.image} 
-                className="w-full h-full object-contain p-4 transition duration-500" 
-              />
-            ) : (
-              <span className="text-8xl">🛍️</span>
-            )}
-          </div>
+      <div className="flex flex-col lg:flex-row gap-12 items-start">
+        {/* Left: Image Gallery */}
+        <div className="w-full lg:w-1/2 sticky top-8">
+           <div className="bg-white rounded-[3rem] p-4 shadow-2xl shadow-brand-100/30 border border-gray-50 relative overflow-hidden group">
+              <div className="aspect-square bg-slate-50 rounded-[2.5rem] flex items-center justify-center overflow-hidden relative">
+                {isSold && (
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-20 flex items-center justify-center">
+                    <span className="bg-white text-brand-600 px-10 py-4 rounded-2xl font-black text-3xl rotate-[-5deg] shadow-2xl border-4 border-brand-500 scale-110">
+                      {isAr ? "تم البيع" : "SOLD"}
+                    </span>
+                  </div>
+                )}
+                <img 
+                  src={supply.activeImage || supply.image} 
+                  className="w-full h-full object-contain p-8 hover:scale-105 transition-transform duration-700" 
+                  alt={supply.name}
+                />
+              </div>
 
-          {/* Gallery Thumbnails */}
-          {supply.gallery && supply.gallery.length > 0 && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-white/40 backdrop-blur-md rounded-2xl border border-white/50 shadow-lg">
-              <button 
-                onClick={() => setSupply({...supply, activeImage: supply.image})}
-                className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition ${!supply.activeImage || supply.activeImage === supply.image ? 'border-brand-500 scale-110 shadow-md' : 'border-transparent opacity-70'}`}
-              >
-                <img src={supply.image} className="w-full h-full object-cover" />
-              </button>
-              {supply.gallery.map((img, idx) => (
-                <button 
-                  key={idx}
-                  onClick={() => setSupply({...supply, activeImage: img})}
-                  className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition ${supply.activeImage === img ? 'border-brand-500 scale-110 shadow-md' : 'border-transparent opacity-70'}`}
-                >
-                  <img src={img} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        
-        <div className={`md:w-1/2 p-10 flex flex-col ${isAr ? 'text-right' : 'text-left'}`}>
-          <div className={`mb-4 ${isAr ? 'flex justify-end' : ''}`}>
-            <span className="bg-brand-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md shadow-brand-500/20">
-              {t(`categories.${supply.category?.toLowerCase() || 'other'}`)}
-            </span>
-          </div>
-          <h1 className="text-4xl font-black text-gray-900 mb-2 leading-tight">{supply.name}</h1>
-          <p className="text-4xl font-black text-brand-500 mb-8 flex items-baseline gap-1">
-            <span className="text-xl font-bold">{isAr ? 'دينار' : 'JOD'}</span>
-            {supply.price}
-          </p>
-          
-          <div className="mb-10 flex-1">
-            <h2 className="text-xl font-black text-gray-900 mb-4">{t('details.item_desc')}</h2>
-            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap mb-2 text-lg italic">{supply.description || t('details.no_desc')}</p>
-            <TranslateButton text={supply.description} className="mb-10" />
-
-            <h2 className={`text-xl font-black text-gray-900 mb-4 flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-              <Package size={22} className="text-brand-500" /> {t('details.features')}
-            </h2>
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              {supply.features?.map((feature, idx) => (
-                <div key={idx} className={`flex items-center gap-3 text-gray-700 bg-brand-50/30 px-4 py-3 rounded-2xl border border-brand-100 ${isAr ? 'flex-row-reverse' : ''}`}>
-                  <CheckCircle2 size={18} className="text-brand-500 shrink-0" />
-                  <span className="text-sm font-bold">{feature}</span>
+              {/* Thumbnails */}
+              {supply.gallery && supply.gallery.length > 0 && (
+                <div className="flex gap-3 p-4 mt-2 overflow-x-auto hide-scrollbar">
+                  <button 
+                    onClick={() => setSupply({...supply, activeImage: supply.image})}
+                    className={`w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all ${(!supply.activeImage || supply.activeImage === supply.image) ? 'border-brand-500 scale-105 shadow-lg' : 'border-gray-100 opacity-60'}`}
+                  >
+                    <img src={supply.image} className="w-full h-full object-cover" />
+                  </button>
+                  {supply.gallery.map((img, idx) => (
+                    <button 
+                      key={idx}
+                      onClick={() => setSupply({...supply, activeImage: img})}
+                      className={`w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all ${supply.activeImage === img ? 'border-brand-500 scale-105 shadow-lg' : 'border-gray-100 opacity-60'}`}
+                    >
+                      <img src={img} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
                 </div>
-              ))}
-              {(!supply.features || supply.features.length === 0) && (
-                <p className="text-gray-400 text-sm font-medium">{t('details.std_supply')}</p>
               )}
-            </div>
-          </div>
-          
-          <div className="bg-slate-50 p-8 rounded-[2rem] mt-auto shadow-inner border border-gray-100 space-y-4">
-            <button 
-              onClick={handleRequest}
-              disabled={isSold || hasRequested || requesting}
-              className={`w-full font-black py-4 rounded-xl transition shadow-xl flex items-center justify-center gap-2 text-lg ${
-                isSold ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none" :
-                hasRequested ? "bg-emerald-50 text-emerald-600 border-2 border-emerald-500 cursor-default shadow-none" :
-                "bg-brand-500 text-white hover:bg-brand-600 shadow-brand-500/40"
-              }`}
-            >
-              {isSold ? (isAr ? "تم البيع" : "Sold") : 
-               hasRequested ? (
-                 <>
-                   <CheckCircle2 size={24} />
-                   {isAr ? "تم إرسال الطلب" : "Request Sent"}
-                 </>
-               ) : 
-               requesting ? (isAr ? "جاري الإرسال..." : "Sending...") :
-               (isAr ? "اطلب الشراء الآن" : "Request to Buy Now")}
-            </button>
+           </div>
+        </div>
 
-            <div className="pt-4 border-t border-gray-200 grid grid-cols-2 gap-3">
-              <CopyPhoneButton phone={supply.phone} />
+        {/* Right: Content */}
+        <div className="w-full lg:w-1/2 space-y-8">
+          <div className={`${isAr ? 'text-right' : 'text-left'}`}>
+            <div className={`flex items-center gap-2 mb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <span className="bg-brand-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-500/20">
+                {t(`categories.${supply.category?.toLowerCase() || 'other'}`)}
+              </span>
+              <div className="flex items-center gap-1.5 bg-gray-50 text-gray-500 px-3 py-1 rounded-full text-[10px] font-black border border-gray-100">
+                <MapPin size={12} className="text-brand-400" /> {supply.location}
+              </div>
+            </div>
+            
+            <h1 className="text-5xl font-black text-gray-900 mb-4 tracking-tight leading-tight">{supply.name}</h1>
+            
+            <p className="text-5xl font-black text-brand-600 mb-8 tabular-nums">
+              <span className="text-2xl font-bold opacity-50 mr-1">{isAr ? 'دينار' : 'JOD'}</span>
+              {supply.price}
+            </p>
+
+            {/* Seller Quick Info */}
+            <Link href={`/user/${supply.userId}`} className={`flex items-center gap-4 p-5 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all mb-8 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-500">
+                <User size={32} />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-black text-gray-900 text-lg">{supply.userDisplayName || "Seller"}</h3>
+                <div className={`flex items-center gap-4 text-xs font-bold text-gray-400 ${isAr ? 'flex-row-reverse' : ''}`}>
+                  <span className="flex items-center gap-1"><Package size={14} className="text-brand-400" /> {sellerStats.total} {isAr ? 'إعلانات' : 'Ads'}</span>
+                  <span className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md"><CheckCircle2 size={14} /> {sellerStats.sold} {isAr ? 'مبيعات' : 'Sales'}</span>
+                </div>
+              </div>
+              <div className="text-brand-500 font-black text-sm transition-transform">
+                {isAr ? 'عرض الملف ←' : 'View Profile →'}
+              </div>
+            </Link>
+
+            {/* Description */}
+            <div className="space-y-4 mb-10">
+              <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter flex items-center gap-2">
+                <div className="w-2 h-6 bg-brand-500 rounded-full"></div>
+                {t('details.item_desc')}
+              </h2>
+              <p className="text-gray-600 leading-relaxed text-xl whitespace-pre-wrap italic">
+                {supply.description || t('details.no_desc')}
+              </p>
+              <TranslateButton text={supply.description} className="pt-2" />
+            </div>
+
+            {/* Features */}
+            <div className="space-y-4 mb-12">
+               <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter flex items-center gap-2">
+                <div className="w-2 h-6 bg-brand-500 rounded-full"></div>
+                {t('details.features')}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {supply.features?.map((f, i) => (
+                  <div key={i} className={`flex items-center gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm ${isAr ? 'flex-row-reverse' : ''}`}>
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500">
+                      <CheckCircle2 size={16} />
+                    </div>
+                    <span className="font-bold text-gray-700">{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Card */}
+            <div className="bg-brand-50 rounded-[3rem] p-8 border border-brand-100 shadow-xl shadow-brand-500/5 space-y-6">
+              <div className={`flex items-center justify-between gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+                 <div className={`${isAr ? 'text-right' : ''}`}>
+                    <p className="text-xs font-black text-brand-400 uppercase tracking-widest mb-1">{isAr ? 'الحالة' : 'Status'}</p>
+                    <p className="text-xl font-black text-gray-900">{isSold ? (isAr ? 'تم البيع' : 'Sold Out') : (isAr ? 'متوفر' : 'Available')}</p>
+                 </div>
+                 <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                   <ShieldCheck className="text-emerald-500" size={24} />
+                 </div>
+              </div>
+
               <button 
-                onClick={handleMessage}
-                className="w-full bg-white border-2 border-brand-500 text-brand-500 font-black py-3 rounded-xl hover:bg-brand-50 transition shadow-sm text-sm"
+                onClick={handleRequest}
+                disabled={isSold || hasRequested || requesting}
+                className={`w-full font-black py-5 rounded-[2rem] transition-all transform active:scale-95 shadow-2xl flex items-center justify-center gap-3 text-xl ${
+                  isSold ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none" :
+                  hasRequested ? "bg-white text-emerald-600 border-4 border-emerald-500 shadow-none cursor-default" :
+                  "bg-brand-500 text-white hover:bg-brand-600 shadow-brand-500/40"
+                }`}
               >
-                {t('details.msg_seller')}
+                {isSold ? (isAr ? "تم البيع" : "Sold Out") : 
+                 hasRequested ? (
+                   <>
+                     <CheckCircle2 size={28} />
+                     {isAr ? "تم إرسال الطلب" : "Request Sent"}
+                   </>
+                 ) : 
+                 requesting ? (isAr ? "جاري الإرسال..." : "Sending...") :
+                 (isAr ? "طلب شراء الآن" : "Purchase Request")}
               </button>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <CopyPhoneButton phone={supply.phone} />
+                <button 
+                  onClick={handleMessage}
+                  className="w-full bg-white border-2 border-brand-500 text-brand-500 font-black py-4 rounded-[1.5rem] hover:bg-brand-50 transition shadow-sm"
+                >
+                  {t('details.msg_seller')}
+                </button>
+              </div>
             </div>
           </div>
         </div>

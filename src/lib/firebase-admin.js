@@ -38,13 +38,14 @@ export const adminAuth = {
   // We can also just use a proxy or a simpler approach
 };
 
-// Safer approach for Next.js build:
 export const getAdminDb = () => {
-  getAdminApp();
+  const app = getAdminApp();
+  if (!app) return null;
   return admin.firestore();
 };
 
 export const getAdminAuth = () => {
-  getAdminApp();
+  const app = getAdminApp();
+  if (!app) return null;
   return admin.auth();
 };

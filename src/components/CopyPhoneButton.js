@@ -25,11 +25,11 @@ export default function CopyPhoneButton({ phone }) {
       }`}>
         {copied ? <Check size={20} /> : <Phone size={20} />}
       </div>
-      <div className="min-w-0 flex-1">
+      <div className="flex-1">
         <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-0.5 leading-none">
           {copied ? "Copied!" : "Phone Number (Click to Copy)"}
         </p>
-        <p className="text-sm sm:text-base font-black text-slate-900 leading-tight">
+        <p className="text-sm font-black text-slate-900 leading-tight whitespace-nowrap overflow-visible">
           {phone || "Not Provided"}
         </p>
       </div>

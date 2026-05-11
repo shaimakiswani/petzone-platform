@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import nodemailer from "nodemailer";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req) {
   try {
     const { email } = await req.json();
