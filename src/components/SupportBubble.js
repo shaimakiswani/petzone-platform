@@ -104,7 +104,7 @@ export default function SupportBubble() {
   };
 
   return (
-    <div className={`fixed bottom-10 right-24 z-50`}>
+    <div className={`fixed bottom-28 right-6 md:right-10 z-50`}>
       {/* Support Window */}
       {isOpen && (
         <div className={`absolute bottom-0 ${isAr ? 'left-0' : 'right-0'} w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden transition-all animate-in slide-in-from-bottom-5 duration-300 flex flex-col h-[500px]`}>
