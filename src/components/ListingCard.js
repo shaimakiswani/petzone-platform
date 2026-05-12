@@ -321,8 +321,7 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 });
 
 export default ListingCard;
