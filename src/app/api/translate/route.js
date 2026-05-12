@@ -13,6 +13,14 @@ export async function POST(req) {
       return NextResponse.json({ error: "No text provided." }, { status: 400 });
     }
 
+    const modelsToTry = [
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-1.5-flash",
+      "gemini-pro"
+    ];
+
     const prompt = `You are a professional translator for PetZone. 
     Translate the following text into ${targetLang === 'ar' ? 'Arabic' : 'English'}.
     Ensure the translation is natural and high-quality for a pet marketplace.
@@ -21,37 +29,41 @@ export async function POST(req) {
     TEXT TO TRANSLATE:
     ${text}`;
 
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.1,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 1024,
+    for (const modelId of modelsToTry) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${apiKey}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: prompt }]
+            }]
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          const translatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Translation failed.";
+          return NextResponse.json({ translatedText: translatedText.trim() });
+        } else {
+          console.warn(`Translation Fallback: ${modelId} failed:`, data.error?.message);
+          // If it's the last model, return the error
+          if (modelId === modelsToTry[modelsToTry.length - 1]) {
+             return NextResponse.json({ 
+               error: "Gemini API error.", 
+               details: data.error?.message || "Unknown error",
+               status: response.status 
+             }, { status: 500 });
+          }
         }
-      })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      const translatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Translation failed.";
-      return NextResponse.json({ translatedText: translatedText.trim() });
-    } else {
-      console.error("Gemini API Error details:", data);
-      return NextResponse.json({ 
-        error: "Gemini API error.", 
-        details: data.error?.message || "Unknown error",
-        status: response.status 
-      }, { status: 500 });
+      } catch (err) {
+        console.warn(`Translation Fallback Error for ${modelId}:`, err);
+      }
     }
+
+    return NextResponse.json({ error: "All translation models failed." }, { status: 500 });
 
   } catch (error) {
     console.error("Translation Error:", error);
