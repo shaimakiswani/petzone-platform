@@ -181,8 +181,8 @@ export default function PetDetails({ params }) {
            </div>
         </div>
 
-        {/* Right: Content */}
-        <div className="w-full lg:w-1/2 space-y-8">
+        {/* Right: Content Card */}
+        <div className="w-full lg:w-1/2 bg-white rounded-[3rem] p-8 md:p-10 shadow-2xl shadow-brand-100/20 border border-gray-50 space-y-8">
           <div className={`${isAr ? 'text-right' : 'text-left'}`}>
             <div className={`flex flex-wrap items-center gap-2 mb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
               <span className="bg-brand-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-500/20">
