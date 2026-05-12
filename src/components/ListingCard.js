@@ -112,7 +112,7 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group relative flex flex-col h-full border border-white/50 hover:border-brand-100/50">
+    <div className="bg-brand-50/90 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group relative flex flex-col h-full border border-brand-100/30 hover:border-brand-200">
       {/* Image Container */}
       <div className="relative aspect-[4/3] overflow-hidden group">
         <img 
@@ -223,7 +223,7 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
       )}
 
       {/* Content Section */}
-      <div className="p-5 flex flex-col flex-1 bg-brand-50/80 backdrop-blur-sm rounded-b-[2.5rem] border-t border-brand-100/50">
+      <div className="p-5 flex flex-col flex-1 bg-brand-100/40 backdrop-blur-sm rounded-b-[2.5rem] border-t border-brand-200/20">
         {/* Header: Title */}
         <div className={`flex justify-between items-start mb-3 gap-2 ${isAr ? 'flex-row-reverse text-right' : 'text-left'}`}>
           <h3 className="text-2xl font-black text-gray-900 leading-tight truncate group-hover:text-brand-500 transition-colors">{item.name}</h3>

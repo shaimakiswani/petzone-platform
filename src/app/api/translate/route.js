@@ -13,12 +13,15 @@ export async function POST(req) {
       return NextResponse.json({ error: "No text provided." }, { status: 400 });
     }
 
-    const prompt = `Translate the following pet-related description into ${targetLang === 'ar' ? 'Arabic' : 'English'}. 
-    Only provide the translated text without any explanations or extra characters.
-    
-    Text to translate: "${text}"`;
+    const prompt = `You are a professional translator for PetZone. 
+    Translate the following text into ${targetLang === 'ar' ? 'Arabic' : 'English'}.
+    Ensure the translation is natural and high-quality for a pet marketplace.
+    Only return the translated text. Do not include quotes, explanations, or any other text.
 
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    TEXT TO TRANSLATE:
+    ${text}`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const response = await fetch(url, {
       method: 'POST',
@@ -26,7 +29,13 @@ export async function POST(req) {
       body: JSON.stringify({
         contents: [{
           parts: [{ text: prompt }]
-        }]
+        }],
+        generationConfig: {
+          temperature: 0.1,
+          topP: 0.95,
+          topK: 40,
+          maxOutputTokens: 1024,
+        }
       })
     });
 
@@ -36,7 +45,12 @@ export async function POST(req) {
       const translatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Translation failed.";
       return NextResponse.json({ translatedText: translatedText.trim() });
     } else {
-      return NextResponse.json({ error: "Gemini API error." }, { status: 500 });
+      console.error("Gemini API Error details:", data);
+      return NextResponse.json({ 
+        error: "Gemini API error.", 
+        details: data.error?.message || "Unknown error",
+        status: response.status 
+      }, { status: 500 });
     }
 
   } catch (error) {
