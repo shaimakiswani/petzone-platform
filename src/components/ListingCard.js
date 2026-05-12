@@ -223,7 +223,7 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
       )}
 
       {/* Content Section */}
-      <div className="p-5 flex flex-col flex-1 bg-brand-100/40 backdrop-blur-sm rounded-b-[2.5rem] border-t border-brand-200/20">
+      <div className="p-5 flex flex-col flex-1 bg-white rounded-b-[2.5rem] border-t border-brand-100/50">
         {/* Header: Title */}
         <div className={`flex justify-between items-start mb-3 gap-2 ${isAr ? 'flex-row-reverse text-right' : 'text-left'}`}>
           <h3 className="text-2xl font-black text-gray-900 leading-tight truncate group-hover:text-brand-500 transition-colors">{item.name}</h3>

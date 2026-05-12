@@ -28,6 +28,8 @@ export default function TranslateButton({ text, className = "" }) {
       if (data.translatedText) {
         setTranslatedText(data.translatedText);
         setShowOriginal(false);
+      } else {
+        alert("Translation Error: " + (data.details || data.error || "Unknown error"));
       }
     } catch (error) {
       console.error("Translation error:", error);
