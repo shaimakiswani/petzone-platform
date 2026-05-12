@@ -114,7 +114,7 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
   return (
     <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group relative flex flex-col h-full border border-white/50 hover:border-brand-100/50">
       {/* Image Container */}
-      <div className="relative aspect-square overflow-hidden group">
+      <div className="relative aspect-[4/3] overflow-hidden group">
         <img 
           src={displayImage} 
           alt={item.name} 
@@ -223,19 +223,32 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
       )}
 
       {/* Content Section */}
-      <div className="p-6 flex flex-col flex-1 bg-white/40 backdrop-blur-md rounded-b-[2.5rem]">
+      <div className="p-5 flex flex-col flex-1 bg-slate-50/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-b-[2.5rem] border-t border-gray-100 dark:border-slate-700">
         {/* Header: Title */}
-        <div className={`flex justify-between items-start mb-2 gap-2 ${isAr ? 'flex-row-reverse text-right' : 'text-left'}`}>
-          <h3 className="text-xl font-black text-gray-900 leading-tight truncate group-hover:text-brand-500 transition-colors">{item.name}</h3>
+        <div className={`flex justify-between items-start mb-3 gap-2 ${isAr ? 'flex-row-reverse text-right' : 'text-left'}`}>
+          <h3 className="text-2xl font-black text-gray-900 leading-tight truncate group-hover:text-brand-500 transition-colors">{item.name}</h3>
+          <p className="text-xl font-black text-brand-600">
+            {item.price === 0 || item.price === "0" ? t('common.free') : `${item.price} JOD`}
+          </p>
+        </div>
+
+        {/* Tags Row */}
+        <div className={`flex flex-wrap gap-2 mb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+          <div className="bg-white px-3 py-1 rounded-xl text-[10px] font-black text-gray-400 border border-gray-100 shadow-sm">
+            {item.breed || item.category || t('common.details')}
+          </div>
+          <div className="bg-white px-3 py-1 rounded-xl text-[10px] font-black text-gray-400 border border-gray-100 shadow-sm flex items-center gap-1">
+            <MapPin size={10} className="text-brand-400" /> {item.location}
+          </div>
         </div>
 
         {/* Seller Info Link */}
         {item.userId && (
           <Link 
             href={`/user/${item.userId}`}
-            className={`flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl hover:bg-brand-50 transition-colors mb-4 w-full border border-slate-100 ${isAr ? 'flex-row-reverse text-right' : ''}`}
+            className={`flex items-center gap-2 px-3 py-2 bg-white rounded-xl hover:bg-brand-50 transition-colors mb-4 w-full border border-slate-100 ${isAr ? 'flex-row-reverse text-right' : ''}`}
           >
-            <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-brand-500">
+            <div className="w-8 h-8 rounded-lg bg-slate-50 shadow-sm flex items-center justify-center text-brand-500">
               <User size={16} />
             </div>
             <div className="flex-1">
