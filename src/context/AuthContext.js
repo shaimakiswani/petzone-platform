@@ -23,6 +23,11 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         try {
+          if (!db) {
+            console.error("Firestore DB is not initialized.");
+            setUser(currentUser);
+            return;
+          }
           const docRef = doc(db, "users", currentUser.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {

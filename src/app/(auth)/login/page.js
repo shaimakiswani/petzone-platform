@@ -5,8 +5,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PawPrint, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
-import { auth } from "@/firebase/config";
+import { auth, db } from "@/firebase/config";
 import { sendPasswordResetEmail } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -27,9 +28,8 @@ export default function LoginPage() {
       
       const userCredential = await login(email, password);
       
-      // Fetch user doc to check if it's a new system account
-      const { doc, getDoc } = await import("firebase/firestore");
-      const { db } = await import("@/firebase/config");
+      // Fetch user doc with safety checks
+      if (!db) throw new Error("Database connection not ready.");
       const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
       const userData = userDoc.data();
 
