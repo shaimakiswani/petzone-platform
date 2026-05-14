@@ -20,7 +20,7 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !db) return;
 
     // Listen for Chats
     const qChats = query(

@@ -14,6 +14,12 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+let dbInstance;
+try {
+  dbInstance = getFirestore(app);
+} catch (e) {
+  console.error("Firestore failed to initialize:", e);
+}
+export const db = dbInstance;
 export const storage = getStorage(app);
 export default app;

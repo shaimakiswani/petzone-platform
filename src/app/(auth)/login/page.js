@@ -53,8 +53,12 @@ export default function LoginPage() {
 
       router.push("/pets");
     } catch (err) {
-      console.error(err);
-      setError("Failed to sign in. Please check your credentials.");
+      console.error("Login Error:", err);
+      if (err.message?.includes("collection") || err.message?.includes("null")) {
+        setError("Database connection not ready. Please refresh the page and try again.");
+      } else {
+        setError("Failed to sign in. Please check your credentials.");
+      }
     } finally {
       setLoading(false);
     }

@@ -22,6 +22,10 @@ export function FavoritesProvider({ children }) {
       }
       
       try {
+        if (!db || !user?.uid) {
+          setLoading(false);
+          return;
+        }
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
         

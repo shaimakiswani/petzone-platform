@@ -32,7 +32,7 @@ export default function SupportBubble() {
   }, []);
 
   useEffect(() => {
-    if (!user || !isOpen) return;
+    if (!user || !isOpen || !db) return;
     const q = query(
       collection(db, "support_tickets"), 
       where("userId", "==", user.uid),
