@@ -12,31 +12,26 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: "Email is required" }, { status: 400 });
     }
 
-    // 1. Check if user exists in Firestore (get the latest one)
-    const adminDb = getAdminDb();
-    if (!adminDb) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Server configuration error: Firebase Admin is not initialized. Please configure server environment variables." 
-      }, { status: 500 });
+    // 1. Check if user exists in Firestore using client SDK (avoids admin env vars)
+    const { collection, query, where, getDocs, updateDoc, doc } = await import("firebase/firestore");
+    const { db } = await import("@/firebase/config");
+
+    if (!db) {
+      return NextResponse.json({ success: false, error: "Database not initialized" }, { status: 500 });
     }
-    
-    const usersRef = adminDb.collection("users");
-    const snapshot = await usersRef
-      .where("email", "==", email.trim())
-      .orderBy("createdAt", "desc")
-      .limit(1)
-      .get();
+
+    const q = query(collection(db, "users"), where("email", "==", email.trim()));
+    const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
       return NextResponse.json({ success: false, error: "No account found with this email" }, { status: 404 });
     }
 
-    const userDoc = snapshot.docs[0];
+    const userDocRef = snapshot.docs[0].ref;
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // 2. Save reset code in Firestore (valid for 10 mins)
-    await userDoc.ref.update({
+    await updateDoc(userDocRef, {
       resetCode: otp,
       resetCodeExpires: new Date(Date.now() + 10 * 60 * 1000)
     });
