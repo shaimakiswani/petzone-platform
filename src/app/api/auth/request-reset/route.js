@@ -14,6 +14,13 @@ export async function POST(req) {
 
     // 1. Check if user exists in Firestore (get the latest one)
     const adminDb = getAdminDb();
+    if (!adminDb) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Server configuration error: Firebase Admin is not initialized. Please configure server environment variables." 
+      }, { status: 500 });
+    }
+    
     const usersRef = adminDb.collection("users");
     const snapshot = await usersRef
       .where("email", "==", email.trim())
