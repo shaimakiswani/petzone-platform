@@ -57,9 +57,9 @@ export default function PetsPage() {
       
       // Search match (name, breed, location)
       const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = pet.name.toLowerCase().includes(searchLower) ||
-                            pet.breed.toLowerCase().includes(searchLower) ||
-                            pet.location.toLowerCase().includes(searchLower);
+      const matchesSearch = (pet.name || "").toLowerCase().includes(searchLower) ||
+                            (pet.breed || "").toLowerCase().includes(searchLower) ||
+                            (pet.location || "").toLowerCase().includes(searchLower);
 
       return matchesCategory && matchesSearch;
     });

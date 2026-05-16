@@ -98,8 +98,8 @@ export default function AdminSupportInbox() {
 
   const filteredTickets = tickets.filter(t => {
     const matchesFilter = filter === "all" || t.status === filter;
-    const matchesSearch = t.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          t.message?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (t.userEmail || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (t.message || "").toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 

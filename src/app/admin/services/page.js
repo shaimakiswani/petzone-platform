@@ -49,8 +49,8 @@ export default function ServicesManagement() {
   };
 
   const filteredServices = services.filter(s => 
-    s.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.location?.toLowerCase().includes(searchTerm.toLowerCase())
+    (s.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (s.location || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (

@@ -34,8 +34,8 @@ export default function HostelsPage() {
   const filteredItems = useMemo(() => {
     return hostels.filter(item => {
       const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = item.name?.toLowerCase().includes(searchLower) ||
-                            item.location?.toLowerCase().includes(searchLower);
+      const matchesSearch = (item.name || "").toLowerCase().includes(searchLower) ||
+                            (item.location || "").toLowerCase().includes(searchLower);
       
       const itemCategory = item.category || "hostel";
       const matchesCategory = selectedCategory === "All" || itemCategory === selectedCategory;

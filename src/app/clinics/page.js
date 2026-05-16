@@ -32,8 +32,8 @@ export default function ClinicsPage() {
   const filteredItems = useMemo(() => {
     return clinics.filter(item => {
       const searchLower = searchTerm.toLowerCase();
-      return item.name?.toLowerCase().includes(searchLower) ||
-             item.location?.toLowerCase().includes(searchLower);
+      return (item.name || "").toLowerCase().includes(searchLower) ||
+             (item.location || "").toLowerCase().includes(searchLower);
     });
   }, [clinics, searchTerm]);
 

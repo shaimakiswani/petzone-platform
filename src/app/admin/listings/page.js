@@ -80,8 +80,8 @@ export default function ListingsModeration() {
   };
 
   const filteredListings = listings.filter(l => 
-    l.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    l.location?.toLowerCase().includes(searchTerm.toLowerCase())
+    (l.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (l.location || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const stats = {

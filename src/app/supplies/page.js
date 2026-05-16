@@ -53,8 +53,8 @@ export default function SuppliesPage() {
     return supplies.filter(item => {
       const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
       const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = item.name?.toLowerCase().includes(searchLower) ||
-                            item.description?.toLowerCase().includes(searchLower);
+      const matchesSearch = (item.name || "").toLowerCase().includes(searchLower) ||
+                            (item.description || "").toLowerCase().includes(searchLower);
 
       return matchesCategory && matchesSearch;
     });
