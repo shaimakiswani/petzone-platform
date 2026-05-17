@@ -102,7 +102,7 @@ export default function LoginPage() {
           <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mb-4 text-brand-500">
             <PawPrint className="w-8 h-8" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">Welcome Back (v2)</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
           <p className="text-gray-500 mt-2">Sign in to your PetZone account</p>
         </div>
 

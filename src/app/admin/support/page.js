@@ -155,7 +155,7 @@ export default function AdminSupportInbox() {
                         <h3 className="font-bold text-gray-900">{ticket.userName}</h3>
                         <div className="flex items-center gap-4 text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
                           <span className="flex items-center gap-1"><Mail size={12} /> {ticket.userEmail}</span>
-                          <span className="flex items-center gap-1"><Clock size={12} /> {ticket.createdAt?.toDate?.().toLocaleString() || "Just now"}</span>
+                          <span className="flex items-center gap-1"><Clock size={12} /> {ticket.createdAt?.toDate ? ticket.createdAt.toDate().toLocaleString() : "Just now"}</span>
                         </div>
                       </div>
                       <span className={`ml-auto lg:ml-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${ticket.status === 'open' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
