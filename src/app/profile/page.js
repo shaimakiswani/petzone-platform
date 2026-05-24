@@ -602,20 +602,6 @@ function ProfileContent() {
 
               <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Shield className="text-green-500" size={20} /> {t('settings.security')}
-                </h3>
-                <p className="text-sm text-gray-500 mb-6">{t('settings.security_note')}</p>
-                <button 
-                  onClick={handlePasswordReset}
-                  className="w-full py-3 bg-gray-50 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition border border-gray-100"
-                >
-                  {t('settings.pass_reset_btn')}
-                </button>
-              </div>
-            </div>
-
-              <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <Moon className="text-purple-500" size={20} /> Expert Features
                 </h3>
                 <div className="space-y-4">
@@ -633,6 +619,7 @@ function ProfileContent() {
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           )}
         </div>
