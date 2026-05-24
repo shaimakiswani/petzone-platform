@@ -42,15 +42,24 @@ export default function SupportBubble() {
     const unsubscribe = onSnapshot(q, (snap) => {
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setTickets(list);
-      
-      // If we are in chat view, update the active ticket
-      if (activeTicket) {
-        const updated = list.find(t => t.id === activeTicket.id);
-        if (updated) setActiveTicket(updated);
-      }
     });
     return () => unsubscribe();
-  }, [user, isOpen, activeTicket?.id]);
+  }, [user, isOpen]);
+
+  // Real-time listener for the active support ticket (enables direct loading from notifications and bypasses lists limits)
+  useEffect(() => {
+    if (!activeTicket?.id || !isOpen || !db) return;
+
+    const unsubscribe = onSnapshot(doc(db, "support_tickets", activeTicket.id), (docSnap) => {
+      if (docSnap.exists()) {
+        setActiveTicket({ id: docSnap.id, ...docSnap.data() });
+      }
+    }, (err) => {
+      console.error("Error listening to active ticket:", err);
+    });
+
+    return () => unsubscribe();
+  }, [activeTicket?.id, isOpen]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
