@@ -6,8 +6,10 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { collection, addDoc, serverTimestamp, query, where, orderBy, limit, onSnapshot, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { db } from "@/firebase/config";
+import { usePathname } from "next/navigation";
 
 export default function SupportBubble() {
+  const pathname = usePathname();
   const { t, isAr } = useLanguage();
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -111,6 +113,8 @@ export default function SupportBubble() {
       setLoading(false);
     }
   };
+
+  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <div className={`fixed bottom-10 left-6 md:left-10 z-50`}>

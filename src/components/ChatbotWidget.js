@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { Bot, MessageCircle, X, Send, Settings } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function ChatbotWidget() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [apiKey, setApiKey] = useState("");
@@ -58,6 +60,8 @@ export default function ChatbotWidget() {
       setLoading(false);
     }
   };
+
+  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <>
