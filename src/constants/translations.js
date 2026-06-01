@@ -246,6 +246,7 @@ export const translations = {
       },
       hostel: {
         title: "List a Pet Hostel",
+        name: "Hostel Name",
         cat_label: "Category",
         loc: "Location",
         price: "Price per Night (JOD)",
@@ -597,6 +598,7 @@ export const translations = {
       },
       hostel: {
         title: "إضافة فندق للحيوانات",
+        name: "اسم الفندق",
         cat_label: "التصنيف",
         loc: "الموقع",
         price: "سعر الليلة (JOD)",
