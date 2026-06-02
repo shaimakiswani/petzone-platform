@@ -170,7 +170,7 @@ export default function ClinicDetails({ params }) {
                 onClick={handleMessage}
                 className="w-full bg-white border-2 border-brand-500 text-brand-500 font-bold py-3 rounded-xl hover:bg-brand-50 transition shadow-sm"
               >
-                {t('details.message_owner')}
+                {t('details.msg_owner')}
               </button>
             </div>
           </div>
