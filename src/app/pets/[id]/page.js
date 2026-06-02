@@ -147,7 +147,9 @@ export default function PetDetails({ params }) {
                 {isSold && (
                   <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-20 flex items-center justify-center">
                     <span className="bg-white text-brand-600 px-10 py-4 rounded-2xl font-black text-3xl rotate-[-5deg] shadow-2xl border-4 border-brand-500 scale-110">
-                      {isAr ? "تم التبني" : "ADOPTED"}
+                      {isAr 
+                        ? (pet.price === 0 || pet.price === "0" || pet.isAdoption ? "تم التبني" : "تم البيع") 
+                        : (pet.price === 0 || pet.price === "0" || pet.isAdoption ? "ADOPTED" : "SOLD")}
                     </span>
                   </div>
                 )}
@@ -249,8 +251,20 @@ export default function PetDetails({ params }) {
             <div className="bg-brand-50 rounded-[3rem] p-8 border border-brand-100 shadow-xl shadow-brand-500/5 space-y-6">
               <div className={`flex items-center justify-between gap-4 ${isAr ? 'flex-row-reverse' : ''}`}>
                  <div className={`${isAr ? 'text-right' : ''}`}>
-                    <p className="text-xs font-black text-brand-400 uppercase tracking-widest mb-1">{isAr ? 'حالة التبني' : 'Adoption Status'}</p>
-                    <p className="text-xl font-black text-gray-900">{isSold ? (isAr ? 'تم التبني' : 'Adopted') : (isAr ? 'متاح للتبني' : 'Available')}</p>
+                    <p className="text-xs font-black text-brand-400 uppercase tracking-widest mb-1">
+                      {isAr 
+                        ? (pet.price === 0 || pet.price === "0" || pet.isAdoption ? 'حالة التبني' : 'حالة البيع') 
+                        : (pet.price === 0 || pet.price === "0" || pet.isAdoption ? 'Adoption Status' : 'Sale Status')}
+                    </p>
+                    <p className="text-xl font-black text-gray-900">
+                      {isSold 
+                        ? (isAr 
+                            ? (pet.price === 0 || pet.price === "0" || pet.isAdoption ? 'تم التبني' : 'تم البيع') 
+                            : (pet.price === 0 || pet.price === "0" || pet.isAdoption ? 'Adopted' : 'Sold')) 
+                        : (isAr 
+                            ? (pet.price === 0 || pet.price === "0" || pet.isAdoption ? 'متاح للتبني' : 'متاح للبيع') 
+                            : (pet.price === 0 || pet.price === "0" || pet.isAdoption ? 'Available for Adoption' : 'Available for Sale'))}
+                    </p>
                  </div>
                  <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
                    <Heart className="text-brand-500 fill-current" size={24} />
@@ -266,15 +280,17 @@ export default function PetDetails({ params }) {
                   "bg-brand-500 text-white hover:bg-brand-600 shadow-brand-500/40"
                 }`}
               >
-                {isSold ? (isAr ? "تم التبني" : "Adopted") : 
-                 hasRequested ? (
-                   <>
-                     <CheckCircle2 size={28} />
-                     {isAr ? "تم إرسال الطلب" : "Request Sent"}
-                   </>
-                 ) : 
-                 requesting ? (isAr ? "جاري الإرسال..." : "Sending...") :
-                 (isAr ? "طلب تبني الآن" : "Request Adoption")}
+                {isSold ? (isAr ? (pet.price === 0 || pet.price === "0" || pet.isAdoption ? "تم التبني" : "تم البيع") : (pet.price === 0 || pet.price === "0" || pet.isAdoption ? "Adopted" : "Sold")) : 
+                  hasRequested ? (
+                    <>
+                      <CheckCircle2 size={28} />
+                      {isAr ? "تم إرسال الطلب" : "Request Sent"}
+                    </>
+                  ) : 
+                  requesting ? (isAr ? "جاري الإرسال..." : "Sending...") :
+                  (isAr 
+                    ? (pet.price === 0 || pet.price === "0" || pet.isAdoption ? "طلب تبني الآن" : "طلب شراء الآن") 
+                    : (pet.price === 0 || pet.price === "0" || pet.isAdoption ? "Request Adoption" : "Request Purchase"))}
               </button>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

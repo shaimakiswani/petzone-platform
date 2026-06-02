@@ -123,7 +123,9 @@ const ListingCard = memo(function ListingCard({ item, type = "pets" }) {
         {item.status === 'sold' && (
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-20 flex items-center justify-center p-4">
             <div className="bg-white/90 text-brand-600 px-4 py-2 rounded-xl font-black text-sm rotate-[-10deg] shadow-2xl border-2 border-brand-500 scale-125">
-              {isAr ? (type === 'pets' ? "تم التبني" : "تم البيع") : (type === 'pets' ? "ADOPTED" : "SOLD")}
+              {isAr 
+                ? (type === 'pets' && (item.price === 0 || item.price === "0" || item.isAdoption) ? "تم التبني" : "تم البيع") 
+                : (type === 'pets' && (item.price === 0 || item.price === "0" || item.isAdoption) ? "ADOPTED" : "SOLD")}
             </div>
           </div>
         )}
